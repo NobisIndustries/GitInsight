@@ -1,8 +1,6 @@
+from collections import defaultdict
 from copy import copy
 from pathlib import Path, PurePath
-from time import time
-import os
-from collections import defaultdict
 from uuid import uuid4
 
 import git
