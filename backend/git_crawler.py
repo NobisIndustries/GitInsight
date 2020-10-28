@@ -1,16 +1,110 @@
+import pprint
 from collections import defaultdict
 from copy import copy
+from dataclasses import dataclass
 from pathlib import Path, PurePath
+from typing import Dict, List
 from uuid import uuid4
 
 import git
 
 
-class CommitCrawler:
-    def __init__(self, repoPath):
-        self._repo = git.Repo(repoPath)
+class Commit:
+    @classmethod
+    def from_git_commit(cls, git_commit: git.Commit):
+        return Commit(
+            git_commit.hexsha,
+            CommitMetadata.from_git_commit(git_commit),
+            CommitAffectedFiles.from_git_commit(git_commit)
+        )
 
-    def extract_all_commits(self):
+
+    def __init__(self, hash: str, metadata, affected_files):
+        self.hash = hash
+        self.metadata = metadata
+        self.affected_files = affected_files
+    
+    def __repr__(self):
+        return pprint.pformat([f'hash: {self.hash}', f'metadata: {self.metadata}', f'affected_files: {self.affected_files}'])
+
+class CommitMetadata:
+    @classmethod
+    def from_git_commit(cls, git_commit: git.Commit):
+        return CommitMetadata(
+            git_commit.authored_date,
+            git_commit.author.name,
+            git_commit.message
+        )
+
+    def __init__(self, unix_timestamp: int, author: str, message: str):
+        self._unix_timestamp = unix_timestamp
+        self._author = author
+        self._message = message
+
+    def __repr__(self):
+        return ', '.join([f'unix_timestamp: {self._unix_timestamp}', f'author: {self._author}', f'message: {self._message.strip()}'])
+
+class CommitAffectedFiles:
+    @classmethod
+    def from_git_commit(cls, git_commit: git.Commit): 
+        diffs = git_commit.parents[0].diff(git_commit.hexsha) if git_commit.parents else git_commit.diff(git.NULL_TREE)
+        affected_files = [CommitAffectedFile.from_file_diff(diff) for diff in diffs]
+        return CommitAffectedFiles(affected_files)
+
+    def __init__(self, affected_files):
+        self._affected_files = affected_files
+
+    def __iter__(self):
+        for affected_file in self._affected_files:
+            yield affected_file
+    
+    def __repr__(self):
+        return pprint.pformat(self._affected_files)
+
+class CommitAffectedFile:
+    @classmethod
+    def from_file_diff(cls, file_diff):
+        return CommitAffectedFile(
+            cls._to_unix_path(file_diff.a_path),
+            cls._to_unix_path(file_diff.b_path),
+            file_diff.change_type
+        )
+
+    @classmethod
+    def _to_unix_path(cls, path):
+        return PurePath(path).as_posix()
+
+    def __init__(self, old_path, new_path, change_type, id=None):
+        self.old_path = old_path
+        self.new_path = new_path
+        self.change_type = change_type
+        self.id = id
+    
+    def __repr__(self):
+        return ', '.join([f'old_path: {self.old_path}', f'new_path: {self.new_path}', f'change_type: {self.change_type}', f'id: {self.id}'])
+
+
+class CurrentFilePaths:
+    def __init__(self):
+        self._current_paths_of_branches = {}
+    
+    def add_branch_paths(self, branch, current_paths_of_branch):
+        self._current_paths_of_branches[branch] = copy(current_paths_of_branch)
+    
+    def __repr__(self):
+        return pprint.pformat(self._current_paths_of_branches)
+
+@dataclass
+class CrawlResult:
+    child_commit_tree: Dict[str, List[Commit]]
+    current_paths_of_branches: CurrentFilePaths
+
+
+class CommitCrawler:
+    def __init__(self, repo_path: Path):
+        self._repo = git.Repo(repo_path)
+
+    def extract_all_commits(self) -> CrawlResult:
         all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
         print(f'Got {len(all_hashes)} commits')
 
@@ -18,7 +112,7 @@ class CommitCrawler:
         print(f'Reversed children for all commits')
         self._latest_hashes = {self._repo.git.execute(f'git rev-parse {branch}').strip(): str(branch) for branch in self._repo.branches}
         current_paths_of_branches = self.__follow_files()
-        return self._child_commit_graph, current_paths_of_branches
+        return CrawlResult(self._child_commit_graph, current_paths_of_branches)
         
     def __extract_child_tree(self, all_hashes):
         children = defaultdict(list)
@@ -27,49 +121,26 @@ class CommitCrawler:
                 print(f'{i}/{len(all_hashes)}')
             commit = self._repo.commit(hash)
             for parent in commit.parents[:1]:  # When merging there is only a commit in the target branch, not the others that got merged in
-                children[parent.hexsha].append(self.__create_child_commit_entry(hash, commit, parent))
+                children[parent.hexsha].append(self.__create_child_commit_entry(commit))
 
         initial_hash = all_hashes[-1]
         initial_commit = self._repo.commit(initial_hash)
-        children['empty'].append(self.__create_child_commit_entry(initial_hash, initial_commit, None))
+        children['empty'].append(self.__create_child_commit_entry(initial_commit))
         return children
     
-    def __create_child_commit_entry(self, hash, commit, parent):
-        return {
-            'hash': hash,
-            'metadata': {
-                'unix_timestamp': commit.committed_date,
-                'author': commit.author.name,
-                'message': commit.message
-            },
-            'files_affected': self.__get_file_diffs(commit, parent)
-        }
-
-    def __get_file_diffs(self, commit, parent=None):
-        diffs = parent.diff(commit.hexsha) if parent else commit.diff(git.NULL_TREE)
-        affected_files_info = []
-        for diff_of_file in diffs:
-            affected_files_info.append({
-                'old_path': self.__to_unix_path(diff_of_file.a_path),
-                'new_path': self.__to_unix_path(diff_of_file.b_path),
-                'change_type': diff_of_file.change_type,
-                'file_id': None
-            })
-        return affected_files_info
-
-    def __to_unix_path(self, path):
-        return PurePath(path).as_posix()
+    def __create_child_commit_entry(self, commit):
+        return Commit.from_git_commit(commit)
 
     def __get_dict_key_of_value(self, dict_to_search, value):
             keys = [k for k, v in dict_to_search.items() if v == value]
             return keys[0] if keys else None
 
     def __follow_files(self):
-        current_paths_of_branches = {}
+        current_paths_of_branches = CurrentFilePaths()
         self.__follow_file_renames_from_commit('empty', current_paths_of_branches, {})
         return current_paths_of_branches
 
-    def __follow_file_renames_from_commit(self, commit_hash, current_paths_of_branches, branch_file_paths):
+    def __follow_file_renames_from_commit(self, commit_hash, current_paths_of_branches: CurrentFilePaths, branch_file_paths: Dict[str, str]):
         current_commit_hash = commit_hash
         while True:
             if current_commit_hash not in self._child_commit_graph:
@@ -78,32 +149,35 @@ class CommitCrawler:
             if number_child_commits == 0:
                 return
             if number_child_commits == 1:
-                current_commit_hash = self.__process_child_commmit(self._child_commit_graph[current_commit_hash][0], branch_file_paths, current_paths_of_branches)
+                current_commit_hash = self.__process_child_commmit(self._child_commit_graph[current_commit_hash][0], current_paths_of_branches, branch_file_paths)
             else:
                 for child_commit in self._child_commit_graph[current_commit_hash]:
                     sub_branch_file_paths = copy(branch_file_paths)
-                    child_commit_hash = self.__process_child_commmit(child_commit, sub_branch_file_paths, current_paths_of_branches)
+                    child_commit_hash = self.__process_child_commmit(child_commit, current_paths_of_branches, sub_branch_file_paths)
                     self.__follow_file_renames_from_commit(child_commit_hash, current_paths_of_branches, sub_branch_file_paths)  # Only use recursion at commit graph branches
                 return
 
-    def __process_child_commmit(self, child_commit, branch_file_paths, current_paths_of_branches):
-        for file_info in child_commit['files_affected']:
-            change_type = file_info['change_type']
+    def __process_child_commmit(self, child_commit: Commit, current_paths_of_branches: CurrentFilePaths, branch_file_paths: Dict[str, str]):
+        for affected_file in child_commit.affected_files:
+            change_type = affected_file.change_type
             if change_type == 'A':
-                file_id = str(uuid4())
+                file_id = affected_file.id or str(uuid4())
             else:
-                file_id = self.__get_dict_key_of_value(branch_file_paths, file_info['old_path'])
-            file_info['file_id'] = file_id
-            branch_file_paths[file_id] = file_info['new_path']
+                file_id = self.__get_dict_key_of_value(branch_file_paths, affected_file.old_path)
+            affected_file.id = file_id
+            branch_file_paths[file_id] = affected_file.new_path
             if change_type == 'D':
                 del branch_file_paths[file_id]
-        child_commit_hash = child_commit['hash']
-        if  child_commit_hash in self._latest_hashes:
-            current_paths_of_branches[self._latest_hashes[child_commit_hash]] = copy(branch_file_paths)
+        child_commit_hash = child_commit.hash
+        if child_commit_hash in self._latest_hashes:
+            branch_name = self._latest_hashes[child_commit_hash]
+            current_paths_of_branches.add_branch_paths(branch_name, branch_file_paths)
         return child_commit_hash
 
 
 if __name__ == '__main__':
     crawler = CommitCrawler(Path(__file__).parents[2] / 'basic_demo_repo')
-    import pprint
-    pprint.pp(crawler.extract_all_commits())
+    result = crawler.extract_all_commits()
+    pprint.pp(result.child_commit_tree)
+    print('-' * 50)
+    pprint.pp(result.current_paths_of_branches)
