@@ -7,6 +7,9 @@ from typing import Dict, List
 from uuid import uuid4
 
 import git
+from sqlalchemy.orm import sessionmaker
+
+import db_schema as db
 
 
 class Commit:
@@ -20,12 +23,20 @@ class Commit:
 
 
     def __init__(self, hash: str, metadata, affected_files):
-        self.hash = hash
-        self.metadata = metadata
-        self.affected_files = affected_files
+        self._hash = hash
+        self._metadata = metadata
+        self._affected_files = affected_files
     
+    def add_to_db(self, db_session):
+        sql_metadata = self._metadata.to_db_representation(self._hash, self._affected_files.get_number_affected_files())
+        db_session.add(sql_metadata)
+
+        for sql_affected_file in self._affected_files.to_db_representation(self._hash):
+            db_session.add(sql_affected_file)
+
     def __repr__(self):
-        return pprint.pformat([f'hash: {self.hash}', f'metadata: {self.metadata}', f'affected_files: {self.affected_files}'])
+        return pprint.pformat([f'hash: {self._hash}', f'metadata: {self._metadata}', f'affected_files: {self._affected_files}'])
+
 
 class CommitMetadata:
     @classmethod
@@ -36,13 +47,23 @@ class CommitMetadata:
             git_commit.message
         )
 
-    def __init__(self, unix_timestamp: int, author: str, message: str):
-        self._unix_timestamp = unix_timestamp
+    def __init__(self, authored_timestamp: int, author: str, message: str):
+        self._authored_timestamp = authored_timestamp
         self._author = author
         self._message = message
 
+    def to_db_representation(self, hash, number_affected_files):
+        return db.SqlCommitMetadata(
+            hash=hash,
+            authored_timestamp=self._authored_timestamp,
+            author=self._author,
+            message=self._message,
+            number_affected_files=number_affected_files
+        )
+
     def __repr__(self):
-        return ', '.join([f'unix_timestamp: {self._unix_timestamp}', f'author: {self._author}', f'message: {self._message.strip()}'])
+        return ', '.join([f'authored_timestamp: {self._authored_timestamp}', f'author: {self._author}', f'message: {self._message.strip()}'])
+
 
 class CommitAffectedFiles:
     @classmethod
@@ -53,6 +74,12 @@ class CommitAffectedFiles:
 
     def __init__(self, affected_files):
         self._affected_files = affected_files
+    
+    def get_number_affected_files(self):
+        return len(self._affected_files)
+
+    def to_db_representation(self, hash):
+        return [af.to_db_representation(hash) for af in self._affected_files]
 
     def __iter__(self):
         for affected_file in self._affected_files:
@@ -60,6 +87,7 @@ class CommitAffectedFiles:
     
     def __repr__(self):
         return pprint.pformat(self._affected_files)
+
 
 class CommitAffectedFile:
     @classmethod
@@ -74,14 +102,23 @@ class CommitAffectedFile:
     def _to_unix_path(cls, path):
         return PurePath(path).as_posix()
 
-    def __init__(self, old_path, new_path, change_type, id=None):
+    def __init__(self, old_path, new_path, change_type, file_id=None):
         self.old_path = old_path
         self.new_path = new_path
         self.change_type = change_type
-        self.id = id
+        self.file_id = file_id
+    
+    def to_db_representation(self, hash):
+        return db.SqlAffectedFile(
+            hash=hash, 
+            file_id=self.file_id,
+            old_path=self.old_path,
+            new_path=self.new_path,
+            change_type=self.change_type
+        )
     
     def __repr__(self):
-        return ', '.join([f'old_path: {self.old_path}', f'new_path: {self.new_path}', f'change_type: {self.change_type}', f'id: {self.id}'])
+        return ', '.join([f'old_path: {self.old_path}', f'new_path: {self.new_path}', f'change_type: {self.change_type}', f'file_id: {self.file_id}'])
 
 
 class CurrentFilePaths:
@@ -91,13 +128,37 @@ class CurrentFilePaths:
     def add_branch_paths(self, branch, current_paths_of_branch):
         self._current_paths_of_branches[branch] = copy(current_paths_of_branch)
     
+    def add_to_db(self, db_session):
+        for branch, entries in self._current_paths_of_branches.items():
+            for file_id, current_path in entries.items():
+                sql_entry = db.SqlCurrentFilePath(
+                     branch=branch,
+                     file_id=file_id,
+                     current_path=current_path
+                )
+                db_session.add(sql_entry)
+    
     def __repr__(self):
         return pprint.pformat(self._current_paths_of_branches)
 
-@dataclass
+
 class CrawlResult:
-    child_commit_tree: Dict[str, List[Commit]]
-    current_paths_of_branches: CurrentFilePaths
+    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilePaths):
+        self.child_commit_tree = child_commit_tree
+        self.current_paths_of_branches = current_paths_of_branches
+    
+    def write_to_db(self):
+        db.create_tables(clean_before=True)
+
+        Session = sessionmaker(bind=db.get_engine())
+        db_session = Session()
+        for commits in self.child_commit_tree.values():
+            for commit in commits:
+                commit.add_to_db(db_session)
+
+        self.current_paths_of_branches.add_to_db(db_session)
+
+        db_session.commit()
 
 
 class CommitCrawler:
@@ -158,17 +219,17 @@ class CommitCrawler:
                 return
 
     def __process_child_commmit(self, child_commit: Commit, current_paths_of_branches: CurrentFilePaths, branch_file_paths: Dict[str, str]):
-        for affected_file in child_commit.affected_files:
+        for affected_file in child_commit._affected_files:
             change_type = affected_file.change_type
             if change_type == 'A':
-                file_id = affected_file.id or str(uuid4())
+                file_id = affected_file.file_id or str(uuid4())
             else:
                 file_id = self.__get_dict_key_of_value(branch_file_paths, affected_file.old_path)
-            affected_file.id = file_id
+            affected_file.file_id = file_id
             branch_file_paths[file_id] = affected_file.new_path
             if change_type == 'D':
                 del branch_file_paths[file_id]
-        child_commit_hash = child_commit.hash
+        child_commit_hash = child_commit._hash
         if child_commit_hash in self._latest_hashes:
             branch_name = self._latest_hashes[child_commit_hash]
             current_paths_of_branches.add_branch_paths(branch_name, branch_file_paths)
@@ -178,6 +239,5 @@ class CommitCrawler:
 if __name__ == '__main__':
     crawler = CommitCrawler(Path(__file__).parents[2] / 'basic_demo_repo')
     result = crawler.extract_all_commits()
-    pprint.pp(result.child_commit_tree)
-    print('-' * 50)
-    pprint.pp(result.current_paths_of_branches)
+    result.write_to_db()    
+    print('Finished!')
