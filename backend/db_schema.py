@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.schema import ForeignKey
 
 
@@ -37,6 +38,11 @@ class SqlCurrentFilePath(Base):
 
 def get_engine():
     return create_engine('sqlite:///test.db')
+
+
+def get_session():
+    Session = sessionmaker(bind=get_engine())
+    return Session()
 
 
 def create_tables(clean_before=False):

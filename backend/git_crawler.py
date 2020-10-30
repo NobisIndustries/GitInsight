@@ -7,7 +7,6 @@ from typing import Dict, List
 from uuid import uuid4
 
 import git
-from sqlalchemy.orm import sessionmaker
 
 import db_schema as db
 
@@ -18,16 +17,28 @@ class Commit:
         return Commit(
             git_commit.hexsha,
             CommitMetadata.from_git_commit(git_commit),
-            CommitAffectedFiles.from_git_commit(git_commit)
+            CommitAffectedFiles.from_git_commit(git_commit),
+            False
         )
 
+    @classmethod
+    def from_db(cls, db_metadata, db_affected_files):
+        return Commit(
+            db_metadata.hash,
+            CommitMetadata.from_db(db_metadata),
+            CommitAffectedFiles.from_db(db_affected_files),
+            True
+        )
 
-    def __init__(self, hash: str, metadata, affected_files):
+    def __init__(self, hash: str, metadata, affected_files, already_in_db: bool):
         self._hash = hash
         self._metadata = metadata
         self._affected_files = affected_files
+        self._already_in_db = already_in_db
     
     def add_to_db(self, db_session):
+        if self._already_in_db:
+            return
         sql_metadata = self._metadata.to_db_representation(self._hash, self._affected_files.get_number_affected_files())
         db_session.add(sql_metadata)
 
@@ -45,6 +56,14 @@ class CommitMetadata:
             git_commit.authored_date,
             git_commit.author.name,
             git_commit.message
+        )
+
+    @classmethod
+    def from_db(cls, db_metadata: db.SqlCommitMetadata):
+        return CommitMetadata(
+            db_metadata.authored_timestamp,
+            db_metadata.author,
+            db_metadata.message
         )
 
     def __init__(self, authored_timestamp: int, author: str, message: str):
@@ -72,6 +91,11 @@ class CommitAffectedFiles:
         affected_files = [CommitAffectedFile.from_file_diff(diff) for diff in diffs]
         return CommitAffectedFiles(affected_files)
 
+    @classmethod
+    def from_db(cls, db_affected_files: List[db.SqlAffectedFile]):
+        affected_files = [CommitAffectedFile.from_db(db_af) for db_af in db_affected_files]
+        return CommitAffectedFiles(affected_files)
+
     def __init__(self, affected_files):
         self._affected_files = affected_files
     
@@ -96,6 +120,15 @@ class CommitAffectedFile:
             cls._to_unix_path(file_diff.a_path),
             cls._to_unix_path(file_diff.b_path),
             file_diff.change_type
+        )
+
+    @classmethod
+    def from_db(cls, db_affected_file: db.SqlAffectedFile):
+        return CommitAffectedFile(
+            db_affected_file.old_path,
+            db_affected_file.new_path,
+            db_affected_file.change_type,
+            db_affected_file.file_id
         )
 
     @classmethod
@@ -148,10 +181,11 @@ class CrawlResult:
         self.current_paths_of_branches = current_paths_of_branches
     
     def write_to_db(self):
-        db.create_tables(clean_before=True)
+        db_engine = db.get_engine()
+        db.SqlCurrentFilePath.__table__.drop(db_engine)
+        db.create_tables()
 
-        Session = sessionmaker(bind=db.get_engine())
-        db_session = Session()
+        db_session = db.get_session()
         for commits in self.child_commit_tree.values():
             for commit in commits:
                 commit.add_to_db(db_session)
@@ -161,9 +195,31 @@ class CrawlResult:
         db_session.commit()
 
 
+class CommitFetcher:
+    def __init__(self):
+        self._available_commits = self.__fetch_all_commits_from_db()
+
+    def __fetch_all_commits_from_db(self):
+        db_session = db.get_session()
+        db_metadata = db_session.query(db.SqlCommitMetadata).all()
+        db_affected_files = db_session.query(db.SqlAffectedFile).all()
+        affected_files_of_commit = defaultdict(list)
+        for db_af in db_affected_files:
+            affected_files_of_commit[db_af.hash].append(db_af)
+
+        return {db_md.hash: Commit.from_db(db_md, affected_files_of_commit[db_md.hash]) for db_md in db_metadata}
+
+
+    def get_commit(self, git_commit: git.Commit) -> Commit:
+        if git_commit.hexsha in self._available_commits:
+            return self._available_commits[git_commit.hexsha]
+        return Commit.from_git_commit(git_commit)
+    
+
 class CommitCrawler:
     def __init__(self, repo_path: Path):
         self._repo = git.Repo(repo_path)
+        self._commit_fetcher = CommitFetcher()
 
     def extract_all_commits(self) -> CrawlResult:
         all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
@@ -190,7 +246,7 @@ class CommitCrawler:
         return children
     
     def __create_child_commit_entry(self, commit):
-        return Commit.from_git_commit(commit)
+        return self._commit_fetcher.get_commit(commit)
 
     def __get_dict_key_of_value(self, dict_to_search, value):
             keys = [k for k, v in dict_to_search.items() if v == value]
