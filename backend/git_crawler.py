@@ -7,6 +7,7 @@ from typing import Dict, List
 from uuid import uuid4
 
 import git
+from bidict import bidict
 
 import db_schema as db
 
@@ -226,7 +227,6 @@ class CommitCrawler:
         print(f'Got {len(all_hashes)} commits')
 
         self._child_commit_graph = self.__extract_child_tree(all_hashes)
-        print(f'Reversed children for all commits')
         self._latest_hashes = {self._repo.git.execute(f'git rev-parse {branch}').strip(): str(branch) for branch in self._repo.branches}
         current_paths_of_branches = self.__follow_files()
         return CrawlResult(self._child_commit_graph, current_paths_of_branches)
@@ -234,7 +234,7 @@ class CommitCrawler:
     def __extract_child_tree(self, all_hashes):
         children = defaultdict(list)
         for i, hash in enumerate(all_hashes):
-            if i % 100 == 0:
+            if i % 500 == 0:
                 print(f'{i}/{len(all_hashes)}')
             commit = self._repo.commit(hash)
             for parent in commit.parents[:1]:  # When merging there is only a commit in the target branch, not the others that got merged in
@@ -248,16 +248,12 @@ class CommitCrawler:
     def __create_child_commit_entry(self, commit):
         return self._commit_fetcher.get_commit(commit)
 
-    def __get_dict_key_of_value(self, dict_to_search, value):
-            keys = [k for k, v in dict_to_search.items() if v == value]
-            return keys[0] if keys else None
-
     def __follow_files(self):
         current_paths_of_branches = CurrentFilePaths()
-        self.__follow_file_renames_from_commit('empty', current_paths_of_branches, {})
+        self.__follow_file_renames_from_commit('empty', current_paths_of_branches, bidict())
         return current_paths_of_branches
 
-    def __follow_file_renames_from_commit(self, commit_hash, current_paths_of_branches: CurrentFilePaths, branch_file_paths: Dict[str, str]):
+    def __follow_file_renames_from_commit(self, commit_hash, current_paths_of_branches: CurrentFilePaths, branch_file_paths: bidict):
         current_commit_hash = commit_hash
         while True:
             if current_commit_hash not in self._child_commit_graph:
@@ -280,7 +276,7 @@ class CommitCrawler:
             if change_type == 'A':
                 file_id = affected_file.file_id or str(uuid4())
             else:
-                file_id = self.__get_dict_key_of_value(branch_file_paths, affected_file.old_path)
+                file_id = branch_file_paths.inverse[affected_file.old_path]
             affected_file.file_id = file_id
             branch_file_paths[file_id] = affected_file.new_path
             if change_type == 'D':
@@ -288,12 +284,12 @@ class CommitCrawler:
         child_commit_hash = child_commit._hash
         if child_commit_hash in self._latest_hashes:
             branch_name = self._latest_hashes[child_commit_hash]
-            current_paths_of_branches.add_branch_paths(branch_name, branch_file_paths)
+            current_paths_of_branches.add_branch_paths(branch_name, dict(branch_file_paths))
         return child_commit_hash
 
 
 if __name__ == '__main__':
-    crawler = CommitCrawler(Path(__file__).parents[2] / 'basic_demo_repo')
+    crawler = CommitCrawler(Path(__file__).parents[2] / 'cpython')
     result = crawler.extract_all_commits()
     result.write_to_db()    
     print('Finished!')
