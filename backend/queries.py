@@ -1,5 +1,3 @@
-import os
-
 import git
 import pandas as pd
 
@@ -14,15 +12,15 @@ class Query:
         self._session = db.get_session()
         self._repo = git.Repo(get_repo_path())
 
-    def get_all_authors(self):
+    def get_all_authors(self) -> pd.Series:
         query = self._session.query(db.SqlCommitMetadata.author).distinct().statement
-        return pd.read_sql(query, self._session.bind)
+        return pd.read_sql(query, self._session.bind).author
 
-    def get_all_branches(self):
+    def get_all_branches(self) -> pd.Series:
         query = self._session.query(db.SqlCurrentFilePath.branch).distinct().statement
-        return pd.read_sql(query, self._session.bind)
+        return pd.read_sql(query, self._session.bind).branch
 
-    def get_all_paths_in_branch(self, branch):
+    def get_all_paths_in_branch(self, branch: str) -> pd.Series:
         query = self._session.query(db.SqlCurrentFilePath.current_path) \
             .filter(db.SqlCurrentFilePath.branch == branch).statement
 
@@ -42,7 +40,7 @@ class Query:
         directory_paths.discard(self.PATH_SPLIT_CHAR)
         return file_paths.append(pd.Series(list(directory_paths)))
 
-    def get_history_of_path(self, file_path: str, branch: str):
+    def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
         hashes_in_branch = self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
         
         relevant_file_ids_query = self._session.query(db.SqlCurrentFilePath.file_id) \
