@@ -1,3 +1,5 @@
+import os
+
 import git
 import pandas as pd
 
@@ -6,6 +8,8 @@ from helpers import get_repo_path
 
 
 class Query:
+    PATH_SPLIT_CHAR = '/'
+
     def __init__(self):
         self._session = db.get_session()
         self._repo = git.Repo(get_repo_path())
@@ -17,6 +21,26 @@ class Query:
     def get_all_branches(self):
         query = self._session.query(db.SqlCurrentFilePath.branch).distinct().statement
         return pd.read_sql(query, self._session.bind)
+
+    def get_all_paths_in_branch(self, branch):
+        query = self._session.query(db.SqlCurrentFilePath.current_path) \
+            .filter(db.SqlCurrentFilePath.branch == branch).statement
+
+        file_paths = pd.read_sql(query, self._session.bind).current_path
+        all_paths = self.__add_directory_entries_to_paths(file_paths)
+        return all_paths
+
+    def __add_directory_entries_to_paths(self, file_paths: pd.Series):
+        # Git only tracks files, not directories. We still want to display the available folders, so we add them here.
+        directory_paths = set()
+        for file_path in file_paths:
+            path_elements = file_path.split(self.PATH_SPLIT_CHAR)[:-1]  # Do not use the file name itself
+            for i in range(len(path_elements)):
+                dir_path = self.PATH_SPLIT_CHAR.join(path_elements[:i])
+                dir_path += self.PATH_SPLIT_CHAR  # Add a / to the end to mark it as a directory at first glance
+                directory_paths.add(dir_path)
+        directory_paths.discard(self.PATH_SPLIT_CHAR)
+        return file_paths.append(pd.Series(list(directory_paths)))
 
     def get_history_of_path(self, file_path: str, branch: str):
         hashes_in_branch = self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
@@ -45,4 +69,5 @@ if __name__ == '__main__':
     q = Query()
     print(q.get_all_authors())
     print(q.get_all_branches())
+    print(q.get_all_paths_in_branch('master'))
     print(q.get_history_of_path('Python/', 'master'))
