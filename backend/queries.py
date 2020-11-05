@@ -1,3 +1,6 @@
+import functools
+from typing import List
+
 import git
 import pandas as pd
 
@@ -41,8 +44,6 @@ class Query:
         return file_paths.append(pd.Series(list(directory_paths)))
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
-        hashes_in_branch = self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
-        
         relevant_file_ids_query = self._session.query(db.SqlCurrentFilePath.file_id) \
             .filter(db.SqlCurrentFilePath.branch == branch) \
             .filter(db.SqlCurrentFilePath.current_path.like(f'{file_path}%')).subquery()
@@ -58,9 +59,16 @@ class Query:
             .join(relevant_file_ids_query) \
             .join(db.SqlCommitMetadata).statement
         result = pd.read_sql(query, self._session.bind)
+
+        hashes_in_branch = self.__get_hashes_in_branch(branch)
         result = result.loc[result.hash.isin(hashes_in_branch)]
+
         result.sort_values('authored_timestamp', ascending=False, inplace=True)
         return result
+
+    @functools.lru_cache(maxsize=10)
+    def __get_hashes_in_branch(self, branch: str) -> List[str]:
+        return self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
 
 
 if __name__ == '__main__':
