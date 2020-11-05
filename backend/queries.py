@@ -35,7 +35,7 @@ class Query:
         # Git only tracks files, not directories. We still want to display the available folders, so we add them here.
         directory_paths = set()
         for file_path in file_paths:
-            path_elements = file_path.split(self.PATH_SPLIT_CHAR)[:-1]  # Do not use the file name itself
+            path_elements = file_path.split(self.PATH_SPLIT_CHAR)
             for i in range(len(path_elements)):
                 dir_path = self.PATH_SPLIT_CHAR.join(path_elements[:i])
                 dir_path += self.PATH_SPLIT_CHAR  # Add a / to the end to mark it as a directory at first glance
@@ -60,11 +60,19 @@ class Query:
             .join(db.SqlCommitMetadata).statement
         result = pd.read_sql(query, self._session.bind)
 
-        hashes_in_branch = self.__get_hashes_in_branch(branch)
-        result = result.loc[result.hash.isin(hashes_in_branch)]
+        result = self.__discard_commits_not_in_branch(branch, result)
+        self.__add_readable_authored_date(result)
 
         result.sort_values('authored_timestamp', ascending=False, inplace=True)
         return result
+
+    def __add_readable_authored_date(self, result):
+        date_time = pd.to_datetime(result.authored_timestamp, unit='s')
+        result['authored_date_time'] = date_time.dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    def __discard_commits_not_in_branch(self, branch, result):
+        hashes_in_branch = self.__get_hashes_in_branch(branch)
+        return result.loc[result.hash.isin(hashes_in_branch)]
 
     @functools.lru_cache(maxsize=10)
     def __get_hashes_in_branch(self, branch: str) -> List[str]:
