@@ -13,6 +13,7 @@
     "dataframe-js": "^1.4.4",
     "plotly.js": "^1.57.1",
     "vue": "^2.6.11",
+    "vue-plotly": "^1.1.0",
     "vue-router": "^3.2.0",
     "vuetify": "^2.2.11",
     "vuex": "^3.4.0"

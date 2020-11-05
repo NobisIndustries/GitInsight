@@ -3,16 +3,19 @@
     Hi there
     <BranchSelector />
     <PathSelector />
-    <div>{{df_vis}}</div>
+    <CommitPlot />
   </div>
 </template>
 
 <script>
-import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue'
-import PathSelector from '@/components/pathAnalysis/PathSelector.vue'
+import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue';
+import PathSelector from '@/components/pathAnalysis/PathSelector.vue';
+import CommitPlot from "@/components/pathAnalysis/CommitPlot";
+
 export default {
   name: 'PathAnalyze',
   components: {
+    CommitPlot,
     BranchSelector,
     PathSelector
   },
@@ -27,12 +30,6 @@ export default {
     });
   },
   computed: {
-    df_vis: function() {
-      let history = this.$store.state.current_entry_history;
-      if (history) 
-        return history.show();
-      return 'nothing yet';
-    }
   }
 }
 </script>
