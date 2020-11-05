@@ -1,7 +1,8 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from 'vue';
+import Vuex from 'vuex';
 
-import axios from 'axios'
+import axios from 'axios';
+import DataFrame from "dataframe-js";
 
 Vue.use(Vuex)
 
@@ -14,7 +15,7 @@ export default new Vuex.Store({
 
     available_entry_paths_of_current_branch: [],
     current_entry_path: null,
-    current_entry_history: {},
+    current_entry_history: null,
     history_is_loading: false
 
   },
@@ -62,7 +63,8 @@ export default new Vuex.Store({
       
       let url = `${API_BASE_PATH}/history/${btoa(context.state.current_branch)}/${btoa(entry_path)}`;
       let request = axios.get(url).then(response => {
-        context.commit('set_current_entry_history', JSON.parse(response.data));
+        let df = new DataFrame(JSON.parse(response.data));
+        context.commit('set_current_entry_history', df);
         context.commit('set_history_is_loading', false);
       });
       return request;

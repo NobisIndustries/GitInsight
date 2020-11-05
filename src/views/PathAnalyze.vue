@@ -3,7 +3,7 @@
     Hi there
     <BranchSelector />
     <PathSelector />
-    <div>{{$store.state.current_entry_history}}</div>
+    <div>{{df_vis}}</div>
   </div>
 </template>
 
@@ -26,6 +26,14 @@ export default {
       this.$store.dispatch('switch_branch', standard_branch);
     });
   },
+  computed: {
+    df_vis: function() {
+      let history = this.$store.state.current_entry_history;
+      if (history) 
+        return history.show();
+      return 'nothing yet';
+    }
+  }
 }
 </script>
 
