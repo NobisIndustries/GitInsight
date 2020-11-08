@@ -35,16 +35,20 @@
           return {};
 
         const min_size = 2;
-        const max_size = 20;
-        let marker_scale = new DataFrame({raw: entry_history.toArray('number_affected_files'), scale: [0]})
-        marker_scale = marker_scale.map(row => row.set('scale',
-            min_size + (max_size - min_size) / (Math.pow(row.get('raw'), 0.5))));
+        const max_size = 25;
+        entry_history = entry_history.withColumn('scale',
+            row => min_size + (max_size - min_size) / (Math.pow(row.get('number_affected_files'), 0.5)));
+        entry_history = entry_history.withColumn('description',
+            row => `${row.get('author')}<br>${row.get('authored_date_time')}<br>------------<br>${row.get('message')}`.replace('\n', '<br>'));
+
         let plot_data = [{
               x: entry_history.toArray('authored_date_time'),
               y: entry_history.toArray('author'),
               marker: {
-                size: marker_scale.toArray('scale'),
+                size: entry_history.toArray('scale'),
               },
+              hoverinfo: 'text',
+              hovertext: entry_history.toArray('description'),
               type: "scatter",
               mode: 'markers',
             }];
