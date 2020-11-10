@@ -1,0 +1,14 @@
+{
+  "Aaron": {
+    "team_id": "my_team",
+    "person_image_url": "http://mycompany.com/employees/Aaron.jpg",
+    "person_description": "Some free text...",
+    "person_contact_link": "mailto:Aaron@mycompany.com"
+  },
+  "Bob": {
+    "team_id": "another_team",
+    "person_image_url": "http://mycompany.com/employees/Bob.jpg",
+    "person_description": "Call me at 123 456",
+    "person_contact_link": "mailto:Bob@mycompany.com"
+  }
+}

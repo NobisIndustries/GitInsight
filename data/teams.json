@@ -1,0 +1,14 @@
+{
+  "my_team": {
+    "team_display_name": "My team",
+    "team_display_color": "#cccccc",
+    "team_description": "This is an optional description",
+    "team_contact_link": "http://mycompany.com/intranet/my_team"
+  },
+  "another_team": {
+    "team_display_name": "Another team",
+    "team_display_color": "#facc33",
+    "team_description": "This team is way better than the other team.",
+    "team_contact_link": "http://mycompany.com/intranet/another_team"
+  }
+}

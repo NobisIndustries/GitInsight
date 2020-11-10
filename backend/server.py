@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from queries import Query
+from queries import CommitQueries
 
 app = FastAPI()
 
@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-query = Query()
+query = CommitQueries()
 
 
 def deescape_forward_slashes(json: str) -> str:

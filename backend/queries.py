@@ -1,19 +1,61 @@
 import functools
-from typing import List
+import json
+from copy import copy
+from pathlib import Path
+from typing import List, Iterable
 
 import git
 import pandas as pd
 
 import db_schema as db
-from helpers import get_repo_path
+from helpers import get_repo_path, get_authors_path, get_teams_path
 
 
-class Query:
+class AuthorInfoProvider:
+    UNKNOWN_TEAM_ID = 'UNKNOWN'
+    UNKNOWN_TEAM_INFO = {
+        'team_display_name': 'Unknown team',
+        'team_display_color': '#cccccc',
+        'team_description': 'This is a fallback team for everyone that has not been assigned to a team yet.',
+        'team_contact_link': ''
+    }
+    UNKNOWN_PERSON_INFO = {
+        'team_id': UNKNOWN_TEAM_ID,
+        'person_image_url': '',
+        'person_description': 'There is no information for this person',
+        'person_contact_link': ''
+    }
+    AUTHOR_COLUMN_NAME = db.SqlCommitMetadata.author.name
+
+    def __init__(self, authors_path: Path, teams_path: Path):
+        with authors_path.open(encoding='utf-8') as f:
+            self._authors = json.load(f)
+        with teams_path.open(encoding='utf-8') as f:
+            self._teams = json.load(f)
+            self._teams[self.UNKNOWN_TEAM_ID] = self.UNKNOWN_TEAM_INFO
+
+    def get_infos_from_names(self, names: Iterable[str]):
+        additional_data = []
+        for name in set(names):
+            person_info = self._authors.get(name, self.UNKNOWN_PERSON_INFO)
+            team_id = person_info['team_id']
+            if team_id not in self._teams:
+                raise ValueError(f'Person "{name}" has a team ID of "{team_id}" that does not exist.')
+
+            info = {self.AUTHOR_COLUMN_NAME: name}
+            info.update(person_info)
+            info.update(self._teams[team_id])
+            additional_data.append(info)
+        return pd.DataFrame(additional_data)
+
+
+class CommitQueries:
     PATH_SPLIT_CHAR = '/'
 
     def __init__(self):
         self._session = db.get_session()
         self._repo = git.Repo(get_repo_path())
+        self._authorInfos = AuthorInfoProvider(get_authors_path(), get_teams_path())
 
     def get_all_authors(self) -> pd.Series:
         query = self._session.query(db.SqlCommitMetadata.author).distinct().statement
@@ -61,7 +103,8 @@ class Query:
         result = pd.read_sql(query, self._session.bind)
 
         result = self.__discard_commits_not_in_branch(branch, result)
-        self.__add_readable_authored_date(result)
+        result = self.__add_readable_authored_date(result)
+        result = self.__add_author_and_team_info(result)
 
         result.sort_values('authored_timestamp', ascending=False, inplace=True)
         return result
@@ -69,6 +112,13 @@ class Query:
     def __add_readable_authored_date(self, result):
         date_time = pd.to_datetime(result.authored_timestamp, unit='s')
         result['authored_date_time'] = date_time.dt.strftime('%Y-%m-%d %H:%M:%S')
+        return result
+
+    def __add_author_and_team_info(self, result):
+        author_column_name = db.SqlCommitMetadata.author.name
+        infos = self._authorInfos.get_infos_from_names(result[author_column_name])
+        result = pd.merge(result, infos, on=author_column_name)
+        return result
 
     def __discard_commits_not_in_branch(self, branch, result):
         hashes_in_branch = self.__get_hashes_in_branch(branch)
@@ -80,8 +130,7 @@ class Query:
 
 
 if __name__ == '__main__':
-    q = Query()
+    q = CommitQueries()
     print(q.get_all_authors())
     print(q.get_all_branches())
     print(q.get_all_paths_in_branch('master'))
-    print(q.get_history_of_path('Python/', 'master'))
