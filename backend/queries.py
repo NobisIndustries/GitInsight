@@ -1,6 +1,5 @@
 import functools
 import json
-from copy import copy
 from pathlib import Path
 from typing import List, Iterable
 
@@ -86,7 +85,7 @@ class CommitQueries:
         return file_paths.append(pd.Series(list(directory_paths)))
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
-        relevant_file_ids_query = self._session.query(db.SqlCurrentFilePath.file_id) \
+        relevant_files_query = self._session.query(db.SqlCurrentFilePath.file_id, db.SqlCurrentFilePath.current_path) \
             .filter(db.SqlCurrentFilePath.branch == branch) \
             .filter(db.SqlCurrentFilePath.current_path.like(f'{file_path}%')).subquery()
 
@@ -97,8 +96,9 @@ class CommitQueries:
             db.SqlCommitMetadata.author,
             db.SqlCommitMetadata.authored_timestamp,
             db.SqlCommitMetadata.message,
-            db.SqlCommitMetadata.number_affected_files) \
-            .join(relevant_file_ids_query) \
+            db.SqlCommitMetadata.number_affected_files,
+            relevant_files_query.c.current_path) \
+            .join(relevant_files_query) \
             .join(db.SqlCommitMetadata).statement
         result = pd.read_sql(query, self._session.bind)
 
@@ -134,3 +134,4 @@ if __name__ == '__main__':
     print(q.get_all_authors())
     print(q.get_all_branches())
     print(q.get_all_paths_in_branch('master'))
+    print(q.get_history_of_path('Python/', 'master'))
