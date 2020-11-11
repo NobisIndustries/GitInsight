@@ -10,7 +10,7 @@
 <script>
 import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue';
 import PathSelector from '@/components/pathAnalysis/PathSelector.vue';
-import CommitPlot from "@/components/pathAnalysis/CommitPlot";
+import CommitPlot from "@/components/pathAnalysis/commitPlot/CommitPlot";
 
 export default {
   name: 'PathAnalyze',
