@@ -28,8 +28,8 @@ class SqlAffectedFile(Base):
     change_type = Column(String(1))
 
 
-class SqlCurrentFilePath(Base):
-    __tablename__ = 'current_file_paths'
+class SqlCurrentFileInfo(Base):
+    __tablename__ = 'current_file_info'
 
     branch = Column(Text, index=True, primary_key=True)
     file_id = Column(String(36), ForeignKey('affected_files.file_id'), index=True, primary_key=True)

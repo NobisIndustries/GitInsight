@@ -202,7 +202,7 @@ class CurrentFilesInfoCollector:
     def add_to_db(self, db_session):
         for branch, file_infos in self._file_infos_of_branch.items():
             for file_info in file_infos:
-                sql_entry = db.SqlCurrentFilePath(
+                sql_entry = db.SqlCurrentFileInfo(
                     branch=branch,
                     file_id=file_info.id,
                     current_path=file_info.path,
@@ -223,7 +223,7 @@ class CrawlResult:
         db_engine = db.get_engine()
 
         db.create_tables()
-        db.SqlCurrentFilePath.__table__.drop(db_engine)
+        db.SqlCurrentFileInfo.__table__.drop(db_engine)
         db.create_tables()
 
         db_session = db.get_session()

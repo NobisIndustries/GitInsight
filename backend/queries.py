@@ -61,12 +61,12 @@ class CommitQueries:
         return pd.read_sql(query, self._session.bind).author
 
     def get_all_branches(self) -> pd.Series:
-        query = self._session.query(db.SqlCurrentFilePath.branch).distinct().statement
+        query = self._session.query(db.SqlCurrentFileInfo.branch).distinct().statement
         return pd.read_sql(query, self._session.bind).branch
 
     def get_all_paths_in_branch(self, branch: str) -> pd.Series:
-        query = self._session.query(db.SqlCurrentFilePath.current_path) \
-            .filter(db.SqlCurrentFilePath.branch == branch).statement
+        query = self._session.query(db.SqlCurrentFileInfo.current_path) \
+            .filter(db.SqlCurrentFileInfo.branch == branch).statement
 
         file_paths = pd.read_sql(query, self._session.bind).current_path
         all_paths = self.__add_directory_entries_to_paths(file_paths)
@@ -85,10 +85,10 @@ class CommitQueries:
         return file_paths.append(pd.Series(list(directory_paths)))
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
-        relevant_files_query = self._session.query(db.SqlCurrentFilePath.file_id, db.SqlCurrentFilePath.current_path,
-                                                   db.SqlCurrentFilePath.line_count) \
-            .filter(db.SqlCurrentFilePath.branch == branch) \
-            .filter(db.SqlCurrentFilePath.current_path.like(f'{file_path}%')).subquery()
+        relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path,
+                                                   db.SqlCurrentFileInfo.line_count) \
+            .filter(db.SqlCurrentFileInfo.branch == branch) \
+            .filter(db.SqlCurrentFileInfo.current_path.like(f'{file_path}%')).subquery()
 
         query = self._session.query(
             db.SqlAffectedFile.hash,
