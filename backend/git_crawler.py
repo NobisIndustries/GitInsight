@@ -1,5 +1,6 @@
 import pprint
-from collections import defaultdict
+import re
+from collections import defaultdict, namedtuple
 from copy import copy
 from pathlib import Path, PurePath
 from typing import Dict, List
@@ -7,6 +8,7 @@ from uuid import uuid4
 
 import git
 from bidict import bidict
+from sqlalchemy.exc import OperationalError
 
 import db_schema as db
 from helpers import get_repo_path
@@ -159,31 +161,63 @@ class CommitAffectedFile:
                           f'change_type: {self.change_type}', f'file_id: {self.file_id}'])
 
 
-class CurrentFilePaths:
-    def __init__(self):
-        self._current_paths_of_branches = {}
+class CurrentFilesInfoCollector:
+    MAGIC_EMPTY_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'  # See https://stackoverflow.com/a/40884093
+    EXTRACT_NUMBER_AT_START_REGEX = re.compile(r'^(\d+)')
+    EntryInfo = namedtuple('EntryInfo', ['id', 'path', 'line_count'])
 
-    def add_branch_paths(self, branch, current_paths_of_branch):
-        self._current_paths_of_branches[branch] = copy(current_paths_of_branch)
+    def __init__(self, repo: git.Repo):
+        self._repo = repo
+        self._file_infos_of_branch = {}
+
+    def add_branch_info(self, branch, branch_head_hash, current_paths_of_branch):
+        line_counts_of_files = self._parse_current_line_counts(branch_head_hash)
+        file_infos = []
+        for file_id, file_path in current_paths_of_branch.items():
+            file_info = self.EntryInfo(file_id, file_path, line_counts_of_files.get(file_path, None))
+            file_infos.append(file_info)
+
+        self._file_infos_of_branch[branch] = file_infos
+
+    def _parse_current_line_counts(self, commit_hash):
+        raw_text = self._repo.git.execute(f'git diff --stat {self.MAGIC_EMPTY_HASH} {commit_hash}')
+        line_counts_of_files = {}
+        for raw_line in raw_text.splitlines():
+            file_path, line_count = self._parse_single_git_line_count_line(raw_line)
+            if file_path is not None:
+                line_counts_of_files[file_path] = line_count
+        return line_counts_of_files
+
+    def _parse_single_git_line_count_line(self, line: str):
+        # Schema:  myDir/subDir/myFile.txt         |    39 +
+        parts = line.split('|')
+        if len(parts) != 2:
+            return None, None
+        file_path = parts[0].strip()
+        line_count_match = re.findall(self.EXTRACT_NUMBER_AT_START_REGEX, parts[1].strip())
+        if not line_count_match:  # At binary entries like: picture.jpg    | Bin 0 -> 27063 bytes
+            return None, None
+        return file_path, int(line_count_match[0])
 
     def add_to_db(self, db_session):
-        for branch, entries in self._current_paths_of_branches.items():
-            for file_id, current_path in entries.items():
+        for branch, file_infos in self._file_infos_of_branch.items():
+            for file_info in file_infos:
                 sql_entry = db.SqlCurrentFilePath(
                     branch=branch,
-                    file_id=file_id,
-                    current_path=current_path
+                    file_id=file_info.id,
+                    current_path=file_info.path,
+                    line_count=file_info.line_count
                 )
                 db_session.add(sql_entry)
 
     def __repr__(self):
-        return pprint.pformat(self._current_paths_of_branches)
+        return pprint.pformat(self._file_infos_of_branch)
 
 
 class CrawlResult:
-    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilePaths):
+    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
         self.child_commit_tree = child_commit_tree
-        self.current_paths_of_branches = current_paths_of_branches
+        self.current_info_of_branches = current_paths_of_branches
 
     def write_to_db(self):
         db_engine = db.get_engine()
@@ -197,17 +231,22 @@ class CrawlResult:
             for commit in commits:
                 commit.add_to_db(db_session)
 
-        self.current_paths_of_branches.add_to_db(db_session)
+        self.current_info_of_branches.add_to_db(db_session)
 
         db_session.commit()
 
 
 class CommitProvider:
     def __init__(self):
-        self._available_commits = self.__fetch_all_commits_from_db()
-
-    def __fetch_all_commits_from_db(self):
         db_session = db.get_session()
+        try:
+            self._available_commits = self.__fetch_all_commits_from_db(db_session)
+        except OperationalError:  # No database was initialized yet
+            self._available_commits = {}
+        finally:
+            db_session.close()
+
+    def __fetch_all_commits_from_db(self, db_session):
         db_metadata = db_session.query(db.SqlCommitMetadata).all()
         db_affected_files = db_session.query(db.SqlAffectedFile).all()
         affected_files_of_commit = defaultdict(list)
@@ -225,7 +264,7 @@ class CommitProvider:
 class CommitCrawler:
     def __init__(self, repo_path: Path):
         self._repo = git.Repo(repo_path)
-        self._commit_fetcher = CommitProvider()
+        self._commit_provider = CommitProvider()
 
         self._child_commit_graph = None
         self._latest_hashes = None
@@ -260,14 +299,14 @@ class CommitCrawler:
         return children
 
     def __create_child_commit_entry(self, commit):
-        return self._commit_fetcher.get_commit(commit)
+        return self._commit_provider.get_commit(commit)
 
     def __follow_files(self):
-        current_paths_of_branches = CurrentFilePaths()
+        current_paths_of_branches = CurrentFilesInfoCollector(self._repo)
         self.__follow_file_renames_from_commit('empty', current_paths_of_branches, bidict())
         return current_paths_of_branches
 
-    def __follow_file_renames_from_commit(self, commit_hash, current_paths_of_branches: CurrentFilePaths,
+    def __follow_file_renames_from_commit(self, commit_hash, files_info_collector: CurrentFilesInfoCollector,
                                           branch_file_paths: bidict):
         current_commit_hash = commit_hash
         while True:
@@ -278,17 +317,17 @@ class CommitCrawler:
                 return
             if number_child_commits == 1:
                 current_commit_hash = self.__process_child_commmit(self._child_commit_graph[current_commit_hash][0],
-                                                                   current_paths_of_branches, branch_file_paths)
+                                                                   files_info_collector, branch_file_paths)
             else:
                 for child_commit in self._child_commit_graph[current_commit_hash]:
                     sub_branch_file_paths = copy(branch_file_paths)
-                    child_commit_hash = self.__process_child_commmit(child_commit, current_paths_of_branches,
+                    child_commit_hash = self.__process_child_commmit(child_commit, files_info_collector,
                                                                      sub_branch_file_paths)
-                    self.__follow_file_renames_from_commit(child_commit_hash, current_paths_of_branches,
+                    self.__follow_file_renames_from_commit(child_commit_hash, files_info_collector,
                                                            sub_branch_file_paths)  # Only use recursion at commit graph branches
                 return
 
-    def __process_child_commmit(self, child_commit: Commit, current_paths_of_branches: CurrentFilePaths,
+    def __process_child_commmit(self, child_commit: Commit, files_info_collector: CurrentFilesInfoCollector,
                                 branch_file_paths: bidict):
         for affected_file in child_commit.affected_files:
             change_type = affected_file.change_type
@@ -296,6 +335,7 @@ class CommitCrawler:
                 file_id = affected_file.file_id or str(uuid4())
             else:
                 file_id = branch_file_paths.inverse[affected_file.old_path]
+
             affected_file.file_id = file_id
             branch_file_paths[file_id] = affected_file.new_path
             if change_type == 'D':
@@ -303,7 +343,7 @@ class CommitCrawler:
         child_commit_hash = child_commit.hash
         if child_commit_hash in self._latest_hashes:
             branch_name = self._latest_hashes[child_commit_hash]
-            current_paths_of_branches.add_branch_paths(branch_name, dict(branch_file_paths))
+            files_info_collector.add_branch_info(branch_name, child_commit_hash, dict(branch_file_paths))
         return child_commit_hash
 
 

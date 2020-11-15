@@ -34,6 +34,7 @@ class SqlCurrentFilePath(Base):
     branch = Column(Text, index=True, primary_key=True)
     file_id = Column(String(36), ForeignKey('affected_files.file_id'), index=True, primary_key=True)
     current_path = Column(Text)
+    line_count = Column(Integer)
 
 
 def get_engine():
