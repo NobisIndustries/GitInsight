@@ -85,7 +85,8 @@ class CommitQueries:
         return file_paths.append(pd.Series(list(directory_paths)))
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
-        relevant_files_query = self._session.query(db.SqlCurrentFilePath.file_id, db.SqlCurrentFilePath.current_path) \
+        relevant_files_query = self._session.query(db.SqlCurrentFilePath.file_id, db.SqlCurrentFilePath.current_path,
+                                                   db.SqlCurrentFilePath.line_count) \
             .filter(db.SqlCurrentFilePath.branch == branch) \
             .filter(db.SqlCurrentFilePath.current_path.like(f'{file_path}%')).subquery()
 
@@ -97,7 +98,8 @@ class CommitQueries:
             db.SqlCommitMetadata.authored_timestamp,
             db.SqlCommitMetadata.message,
             db.SqlCommitMetadata.number_affected_files,
-            relevant_files_query.c.current_path) \
+            relevant_files_query.c.current_path,
+            relevant_files_query.c.line_count) \
             .join(relevant_files_query) \
             .join(db.SqlCommitMetadata).statement
         result = pd.read_sql(query, self._session.bind)
