@@ -39,6 +39,17 @@ export default new Vuex.Store({
       state.history_is_loading = is_loading;
     }
   },
+  getters: {
+    get_current_entry_history_dataframe(state) {
+      // If we simply persisted the already initialized DataFrame in the store and use it in our modules,
+      // all mutations would affect the same instance and trigger infinite loops. Even though the dataframe-js
+      // doc explicitly states that a DataFrame is immutable...
+      let history = state.current_entry_history;
+      if(history)
+        return new DataFrame(history);
+      return null;
+    },
+  },
   actions: {
     load_branches(context) {
       let request = axios.get(`${API_BASE_PATH}/availableBranches`).then(response => {
@@ -63,8 +74,7 @@ export default new Vuex.Store({
       
       let url = `${API_BASE_PATH}/history/${btoa(context.state.current_branch)}/${btoa(entry_path)}`;
       let request = axios.get(url).then(response => {
-        let df = new DataFrame(JSON.parse(response.data));
-        context.commit('set_current_entry_history', df);
+        context.commit('set_current_entry_history', JSON.parse(response.data));
         context.commit('set_history_is_loading', false);
       });
       return request;

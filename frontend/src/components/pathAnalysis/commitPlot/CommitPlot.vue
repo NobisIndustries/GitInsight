@@ -39,7 +39,7 @@ export default {
       return this.$store.state.current_entry_history !== null;
     },
     plot_data() {
-      let entry_history = this.$store.state.current_entry_history;
+      let entry_history = this.$store.getters.get_current_entry_history_dataframe;
       if (!entry_history)
         return [];
 
