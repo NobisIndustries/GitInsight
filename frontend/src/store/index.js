@@ -14,7 +14,7 @@ export default new Vuex.Store({
     current_branch: null,
 
     available_entry_paths_of_current_branch: [],
-    current_entry_path: null,
+    current_entry_path: '',
     current_entry_history: null,
     history_is_loading: false
 

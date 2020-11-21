@@ -130,11 +130,11 @@ export default {
     },
     on_focus() {
       if (this.search.length >= this.min_length)
-        this.is_open = true;
+        this.on_change();
     },
     on_defocus() {
       // Wait for a bit before hiding the results window, so that a possible click on a result can be recognized
-      setTimeout(() => this.is_open = false, 200);
+      setTimeout(() => this.is_open = false, 300);
     },
   },
   watch: {
