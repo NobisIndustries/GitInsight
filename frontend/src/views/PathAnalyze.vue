@@ -3,7 +3,8 @@
     Hi there
     <BranchSelector />
     <PathSelector />
-    <CommitPlot />
+    <CommitPlot v-show="show_plot"/>
+    <OwnershipPlot v-show="show_plot"/>
   </div>
 </template>
 
@@ -11,10 +12,12 @@
 import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue';
 import PathSelector from '@/components/pathAnalysis/PathSelector.vue';
 import CommitPlot from "@/components/pathAnalysis/commitPlot/CommitPlot";
+import OwnershipPlot from "@/components/pathAnalysis/ownershipPlot/OwnershipPlot";
 
 export default {
   name: 'PathAnalyze',
   components: {
+    OwnershipPlot,
     CommitPlot,
     BranchSelector,
     PathSelector
@@ -30,6 +33,9 @@ export default {
     });
   },
   computed: {
+    show_plot() {
+      return this.$store.state.current_entry_history !== null;
+    },
   }
 }
 </script>

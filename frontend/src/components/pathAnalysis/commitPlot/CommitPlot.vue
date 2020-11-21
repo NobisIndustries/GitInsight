@@ -7,7 +7,6 @@
         :data="plot_data"
         :layout="layout"
         :display-mode-bar="false"
-        v-show="show_plot"
     ></Plotly>
   </div>
 </template>
@@ -35,9 +34,6 @@ export default {
   },
   methods: {},
   computed: {
-    show_plot() {
-      return this.$store.state.current_entry_history !== null;
-    },
     plot_data() {
       let entry_history = this.$store.getters.get_current_entry_history_dataframe;
       if (!entry_history)
