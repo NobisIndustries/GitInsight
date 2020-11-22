@@ -22,6 +22,7 @@ export default {
   },
   data() {
     return {
+      plot_layout: {}
     };
   },
   computed: {

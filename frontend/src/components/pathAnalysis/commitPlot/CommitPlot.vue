@@ -46,7 +46,7 @@ export default {
       entry_history = entry_history.withColumn('description',
           row => (`${row.get('author')}<br>${row.get('team_display_name')}<br>`
               + `${row.get('authored_date_time')}<br>------------<br>`
-              + `${row.get('message')}`.replace('\n', '<br>')));
+              + `${word_wrap(row.get('message'))}`.replace('\n', '<br>')));
 
       const plot_options = {'authors': ['author', 'team_display_name', false],
                             'files': ['current_path', 'team_display_name', false],
@@ -59,10 +59,9 @@ export default {
 }
 
 function generate_plot_data(data_frame, y_column, group_by_column, show_lines) {
-  let grouped_frame = data_frame.groupBy(group_by_column);
   let plot_data = [];
   let groupKey, group;
-  for ({groupKey, group} of grouped_frame) {
+  for ({groupKey, group} of data_frame.groupBy(group_by_column)) {
     plot_data.push(generate_single_plot_data(group, y_column, groupKey[group_by_column], show_lines));
   }
   return plot_data;
@@ -82,5 +81,20 @@ function generate_single_plot_data(data_frame, y_column, name, show_lines) {
     mode: (show_lines ? 'markers+lines' : 'markers'),
     name: name,
   }
+}
+
+function word_wrap(text, break_after_chars=100) {
+  let new_words = [];
+  let current_line_length = 0;
+  for(let word of text.split(' ')) {
+    let word_length = word.length;
+    if(current_line_length +  word_length > break_after_chars) {
+      word = '<br>' + word;
+      current_line_length = 0;
+    }
+    new_words.push(word);
+    current_line_length += word_length;
+  }
+  return new_words.join(' ');
 }
 </script>
