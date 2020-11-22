@@ -68,12 +68,12 @@ export default new Vuex.Store({
       });
       return request;
     },
-    load_info_of_entry(context, entry_path) {
+    load_info_of_entry(context, entry_path, limit_results_to) {
       context.commit('set_history_is_loading', true);
       context.commit('set_current_entry_path', entry_path);
       
       let url = `${API_BASE_PATH}/history/${btoa(context.state.current_branch)}/${btoa(entry_path)}`;
-      let request = axios.get(url).then(response => {
+      let request = axios.get(url, {params: {limit: limit_results_to}}).then(response => {
         context.commit('set_current_entry_history', JSON.parse(response.data));
         context.commit('set_history_is_loading', false);
       });

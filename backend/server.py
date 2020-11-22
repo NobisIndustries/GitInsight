@@ -50,7 +50,10 @@ async def determine_entry_history(branch_base64: str, entry_path_base64: str, li
     branch = decode(branch_base64)
     entry_path = decode(entry_path_base64)
     limit = min(limit, 10000)
-    json = query.get_history_of_path(entry_path, branch).head(limit).to_json(orient='records', force_ascii=False)
+    result = query.get_history_of_path(entry_path, branch)
+    if result is None:
+        return None
+    json = result.head(limit).to_json(orient='records', force_ascii=False)
     return deescape_forward_slashes(json)
 
 

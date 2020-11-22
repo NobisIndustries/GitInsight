@@ -103,6 +103,8 @@ class CommitQueries:
             .join(relevant_files_query) \
             .join(db.SqlCommitMetadata).statement
         result = pd.read_sql(query, self._session.bind)
+        if result.empty:
+            return None
 
         result = self.__discard_commits_not_in_branch(branch, result)
         result = self.__add_readable_authored_date(result)
