@@ -261,37 +261,69 @@ class CommitProvider:
         return Commit.from_git_commit(git_commit)
 
 
+class CommitCrawlerState:
+    IDLE = 'IDLE'
+    GET_PREVIOUS_COMMITS = 'GET_PREVIOUS_COMMITS'
+    EXTRACT_COMMITS = 'EXTRACT_COMMITS'
+    CALCULATE_PATHS = 'CALCULATE_PATHS'
+    SAVE_TO_DB = 'SAVE_TO_DB'
+
+
 class CommitCrawler:
+
     def __init__(self, repo_path: Path):
         self._repo = git.Repo(repo_path)
-        self._commit_provider = CommitProvider()
+        self._commit_provider = None
 
         self._child_commit_graph = None
         self._latest_hashes = None
 
-    def crawl(self) -> CrawlResult:
-        all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
-        print(f'Got {len(all_hashes)} commits')
+        self._commits_processed = 0
+        self._commits_total = 0
+        self._current_operation = CommitCrawlerState.IDLE
 
+    def get_status(self):
+        return {
+            'commits_processed': self._commits_processed,
+            'commits_total': self._commits_total,
+            'current_operation': self._current_operation
+        }
+
+    def is_busy(self):
+        return self._current_operation != CommitCrawlerState.IDLE
+
+    def crawl(self):
+        self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
+        self._commit_provider = CommitProvider()
+
+        self._current_operation = CommitCrawlerState.EXTRACT_COMMITS
+        all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
         self._child_commit_graph = self.__extract_child_tree(all_hashes)
+
+        self._current_operation = CommitCrawlerState.CALCULATE_PATHS
         self._latest_hashes = self.__get_latest_commits_of_branches()
         current_paths_of_branches = self.__follow_files()
 
-        return CrawlResult(self._child_commit_graph, current_paths_of_branches)
+        self._current_operation = CommitCrawlerState.SAVE_TO_DB
+        CrawlResult(self._child_commit_graph, current_paths_of_branches).write_to_db()
+
+        self._current_operation = CommitCrawlerState.IDLE
 
     def __get_latest_commits_of_branches(self):
         return {self._repo.git.execute(f'git rev-parse "{branch}"').strip(): str(branch) for branch in
                 self._repo.branches}
 
     def __extract_child_tree(self, all_hashes):
+        self._commits_total = len(all_hashes)
+
         children = defaultdict(list)
         for i, hash in enumerate(all_hashes):
-            if i % 500 == 0:
-                print(f'{i}/{len(all_hashes)}')
             commit = self._repo.commit(hash)
             # When merging there is only a commit in the target branch, not the others that got merged in
             for parent in commit.parents[:1]:
                 children[parent.hexsha].append(self.__create_child_commit_entry(commit))
+
+            self._commits_processed = i + 1
 
         initial_hash = all_hashes[-1]
         initial_commit = self._repo.commit(initial_hash)
@@ -349,6 +381,5 @@ class CommitCrawler:
 
 if __name__ == '__main__':
     crawler = CommitCrawler(get_repo_path())
-    result = crawler.crawl()
-    result.write_to_db()
+    crawler.crawl()
     print('Finished!')
