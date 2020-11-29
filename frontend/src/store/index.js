@@ -52,7 +52,7 @@ export default new Vuex.Store({
   },
   actions: {
     load_branches(context) {
-      let request = axios.get(`${API_BASE_PATH}/availableBranches`).then(response => {
+      let request = axios.get(`${API_BASE_PATH}/entries/availableBranches`).then(response => {
         context.commit('set_available_branches', JSON.parse(response.data));
       });
       return request;
@@ -60,7 +60,7 @@ export default new Vuex.Store({
     switch_branch(context, new_branch) {
       context.commit('set_current_branch', new_branch);
       
-      let url = `${API_BASE_PATH}/availableEntries/${btoa(new_branch)}`;
+      let url = `${API_BASE_PATH}/entries/availableEntries/${btoa(new_branch)}`;
       let request = axios.get(url).then(response => {
         let entries = JSON.parse(response.data);
         entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -72,7 +72,7 @@ export default new Vuex.Store({
       context.commit('set_history_is_loading', true);
       context.commit('set_current_entry_path', entry_path);
       
-      let url = `${API_BASE_PATH}/history/${btoa(context.state.current_branch)}/${btoa(entry_path)}`;
+      let url = `${API_BASE_PATH}/entries/history/${btoa(context.state.current_branch)}/${btoa(entry_path)}`;
       let request = axios.get(url, {params: {limit: limit_results_to}}).then(response => {
         context.commit('set_current_entry_history', JSON.parse(response.data));
         context.commit('set_history_is_loading', false);
