@@ -1,0 +1,13 @@
+name: GitInsight
+channels:
+  - defaults
+dependencies:
+  - gitpython
+  - pip
+  - pandas
+  - sqlalchemy
+  - pip:
+    - bidict
+    - fastapi
+    - uvicorn
+
