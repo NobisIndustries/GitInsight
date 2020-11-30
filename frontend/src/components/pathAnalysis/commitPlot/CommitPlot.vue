@@ -1,29 +1,26 @@
 <template>
-  <div>
-    <PlotBySelector
-        @change="selected_plot_type = $event"
-    ></PlotBySelector>
-    <Plotly
-        :data="plot_data"
-        :layout="layout"
-        :display-mode-bar="false"
-        @click="plotly_click($event)"
-    ></Plotly>
-    <DetailPanel
-        :commit_info_row="clicked_commit_info"
-    ></DetailPanel>
-    </div>
+  <v-card elevation="2" class="pt-3">
+    <v-col align="center">
+      <PlotBySelector
+          @change="selected_plot_type = $event"
+      ></PlotBySelector>
+      <Plotly
+          :data="plot_data"
+          :layout="plot_layout"
+          :display-mode-bar="false"
+          @click="select_commit($event)"
+      ></Plotly>
+    </v-col>
+  </v-card>
 </template>
 
 <script>
 import {Plotly} from 'vue-plotly';
 import PlotBySelector from "@/components/pathAnalysis/commitPlot/PlotBySelector";
-import DetailPanel from "@/components/pathAnalysis/commitPlot/DetailPanel";
 
 export default {
   name: 'CommitPlot',
   components: {
-    DetailPanel,
     PlotBySelector,
     Plotly
   },
@@ -31,21 +28,24 @@ export default {
     return {
       selected_plot_type: undefined,
       clicked_commit_info: null,
-      layout: {
+      plot_layout: {
         hovermode: 'closest',
         yaxis: {
           automargin: true,
+        },
+        margin: {
+          t: 10,
+          b: 30
         }
       }
     };
   },
   methods: {
-    plotly_click(clicked_points) {
+    select_commit(clicked_points) {
       let point_id = clicked_points.points[0].id;
       let entry_history = this.$store.getters.get_current_entry_history_dataframe;
       let selected_row = entry_history.filter({'index': point_id}).getRow(0);
-      console.log(clicked_points);
-      this.clicked_commit_info = selected_row;
+      this.$store.commit('set_selected_commit_detail_data', selected_row)
     }
   },
   computed: {

@@ -4,13 +4,13 @@
       @change="send_change()"
       mandatory
   >
-    <v-btn>
+    <v-btn small>
      Authors
     </v-btn>
-    <v-btn>
+    <v-btn small>
       Files
     </v-btn>
-    <v-btn>
+    <v-btn small>
       Moves & Renames
     </v-btn>
   </v-btn-toggle>

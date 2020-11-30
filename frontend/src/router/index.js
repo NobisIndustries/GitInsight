@@ -1,14 +1,14 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import PathAnalyze from '../views/PathAnalyze.vue'
+import Main from "@/views/Main";
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'Analyze paths',
-    component: PathAnalyze
+    name: 'Main',
+    component: Main
   },
 ]
 

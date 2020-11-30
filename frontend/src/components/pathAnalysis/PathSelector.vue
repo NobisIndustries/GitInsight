@@ -1,19 +1,20 @@
 <template>
-  <div>
+  <div class="d-flex flex-row align-center">
     <AutoComplete
         :initial_value="$store.state.current_entry_path"
         :available_elements="$store.state.available_entry_paths_of_current_branch"
         label_text="Search file or directory..."
         @change="new_path = $event"
+        class="flex-grow-0 flex-shrink-1 full-width"
     />
     <v-btn
         @click="load_entry()"
         color="primary"
-        elevation="2"
+        icon
         :loading="$store.state.history_is_loading"
         :disabled="$store.state.history_is_loading || new_path === ''"
     >
-      Search
+      <v-icon>mdi-magnify</v-icon>
     </v-btn>
     <v-snackbar
         v-model="is_empty_notification"
@@ -34,8 +35,14 @@
   </div>
 </template>
 
+<style scoped>
+.full-width {
+  width: 100%;
+}
+</style>
+
 <script>
-import AutoComplete from "@/components/AutoComplete";
+import AutoComplete from "@/components/common/AutoComplete";
 
 export default {
   name: 'PathSelector',

@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <v-card elevation="2" class="pa-3">
     <Plotly
         :data="plot_data"
         :layout="plot_layout"
         :display-mode-bar="false"
     ></Plotly>
-  </div>
+  </v-card>
 </template>
 
 <style scoped>
@@ -22,7 +22,12 @@ export default {
   },
   data() {
     return {
-      plot_layout: {}
+      plot_layout: {
+        margin: {
+          t: 10,
+          b: 10
+        }
+      }
     };
   },
   computed: {

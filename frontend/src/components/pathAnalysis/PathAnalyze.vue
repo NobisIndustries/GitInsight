@@ -1,11 +1,27 @@
 <template>
-  <div>
-    Hi there
-    <BranchSelector />
-    <PathSelector />
-    <CommitPlot v-show="show_plot"/>
-    <OwnershipPlot v-show="show_plot"/>
-  </div>
+  <v-col>
+    <v-row justify="center">
+      <v-col cols="12" md="3">
+        <BranchSelector/>
+      </v-col>
+      <v-col cols="12" md="6" xl="5">
+        <PathSelector/>
+      </v-col>
+    </v-row>
+    <div v-show="show_plot">
+    <CommitPlot/>
+    <v-row align="start" align-self="stretch">
+      <v-col cols="12" md="6">
+        <CommitDetailPanel
+            :commit_info_row="$store.state.selected_commit_detail_data"
+        />
+      </v-col>
+      <v-col cols="12" md="6">
+        <OwnershipPlot/>
+      </v-col>
+    </v-row>
+    </div>
+  </v-col>
 </template>
 
 <script>
@@ -13,10 +29,12 @@ import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue';
 import PathSelector from '@/components/pathAnalysis/PathSelector.vue';
 import CommitPlot from "@/components/pathAnalysis/commitPlot/CommitPlot";
 import OwnershipPlot from "@/components/pathAnalysis/ownershipPlot/OwnershipPlot";
+import CommitDetailPanel from "@/components/pathAnalysis/commitPlot/CommitDetailPanel";
 
 export default {
   name: 'PathAnalyze',
   components: {
+    CommitDetailPanel,
     OwnershipPlot,
     CommitPlot,
     BranchSelector,

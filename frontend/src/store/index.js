@@ -16,6 +16,7 @@ export default new Vuex.Store({
     available_entry_paths_of_current_branch: [],
     current_entry_path: '',
     current_entry_history: null,
+    selected_commit_detail_data: null,
     history_is_loading: false
 
   },
@@ -34,6 +35,9 @@ export default new Vuex.Store({
     },
     set_current_entry_history(state, history) {
       state.current_entry_history = history;
+    },
+    set_selected_commit_detail_data(state, commit_detail_data) {
+      state.selected_commit_detail_data = commit_detail_data;
     },
     set_history_is_loading(state, is_loading) {
       state.history_is_loading = is_loading;

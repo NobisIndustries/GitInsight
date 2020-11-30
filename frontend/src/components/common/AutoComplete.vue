@@ -9,6 +9,7 @@
         @keydown.enter="on_enter()"
         @focus="on_focus()"
         @blur="on_defocus()"
+        autocomplete="off"
     ></v-text-field>
     <ul
         v-show="is_open"
