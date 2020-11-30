@@ -109,6 +109,8 @@ class CommitQueries:
         result = self.__add_author_and_team_info(result)
 
         result.sort_values('authored_timestamp', ascending=False, inplace=True)
+        result.reset_index(inplace=True, drop=True)
+        result['index'] = result.index
         return result
 
     def __add_readable_authored_date(self, result):
