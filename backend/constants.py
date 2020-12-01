@@ -1,0 +1,1 @@
+PATH_SPLIT_CHAR = '/'

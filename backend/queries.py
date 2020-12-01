@@ -7,6 +7,7 @@ import git
 import pandas as pd
 
 import db_schema as db
+from constants import PATH_SPLIT_CHAR
 from helpers import get_repo_path, get_authors_path, get_teams_path
 
 
@@ -48,13 +49,19 @@ class AuthorInfoProvider:
         return pd.DataFrame(additional_data)
 
 
-class CommitQueries:
-    PATH_SPLIT_CHAR = '/'
-
+class Queries:
     def __init__(self):
-        self._session = db.get_session()
-        self._repo = git.Repo(get_repo_path())
-        self._authorInfos = AuthorInfoProvider(get_authors_path(), get_teams_path())
+        db_session = db.get_session()
+        git_repo = git.Repo(get_repo_path())
+        author_info_provider = AuthorInfoProvider(get_authors_path(), get_teams_path())
+
+        self.general_info = GeneralInfoQueries(db_session)
+        self.file_operations = FileOperationQueries(db_session, git_repo, author_info_provider)
+
+
+class GeneralInfoQueries:
+    def __init__(self, db_session):
+        self._session = db_session
 
     def get_all_authors(self) -> pd.Series:
         query = self._session.query(db.SqlCommitMetadata.author).distinct().statement
@@ -76,13 +83,20 @@ class CommitQueries:
         # Git only tracks files, not directories. We still want to display the available folders, so we add them here.
         directory_paths = set()
         for file_path in file_paths:
-            path_elements = file_path.split(self.PATH_SPLIT_CHAR)
+            path_elements = file_path.split(PATH_SPLIT_CHAR)
             for i in range(len(path_elements)):
-                dir_path = self.PATH_SPLIT_CHAR.join(path_elements[:i])
-                dir_path += self.PATH_SPLIT_CHAR  # Add a / to the end to mark it as a directory at first glance
+                dir_path = PATH_SPLIT_CHAR.join(path_elements[:i])
+                dir_path += PATH_SPLIT_CHAR  # Add a / to the end to mark it as a directory at first glance
                 directory_paths.add(dir_path)
-        directory_paths.discard(self.PATH_SPLIT_CHAR)
+        directory_paths.discard(PATH_SPLIT_CHAR)
         return file_paths.append(pd.Series(list(directory_paths)))
+
+
+class FileOperationQueries:
+    def __init__(self, db_session, git_repo, author_info_provider):
+        self._session = db_session
+        self._repo = git_repo
+        self._author_info_provider = author_info_provider
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
         relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path) \
@@ -120,7 +134,7 @@ class CommitQueries:
 
     def __add_author_and_team_info(self, result):
         author_column_name = db.SqlCommitMetadata.author.name
-        infos = self._authorInfos.get_infos_from_names(result[author_column_name])
+        infos = self._author_info_provider.get_infos_from_names(result[author_column_name])
         result = pd.merge(result, infos, on=author_column_name)
         return result
 
@@ -134,8 +148,8 @@ class CommitQueries:
 
 
 if __name__ == '__main__':
-    q = CommitQueries()
-    print(q.get_all_authors())
-    print(q.get_all_branches())
-    print(q.get_all_paths_in_branch('master'))
-    print(q.get_history_of_path('Python/', 'master'))
+    q = Queries()
+    print(q.general_info.get_all_authors())
+    print(q.general_info.get_all_branches())
+    print(q.general_info.get_all_paths_in_branch('master'))
+    print(q.file_operations.get_history_of_path('Python/', 'master'))
