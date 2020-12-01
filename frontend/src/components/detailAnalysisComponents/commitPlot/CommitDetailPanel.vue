@@ -1,6 +1,6 @@
 <template>
   <v-card elevation="2">
-    <v-card-text v-if="commit_info_row !== null">
+    <v-card-text v-if="commit_info_row !== null" class="text-left pa-8">
       <div>
         {{ commit_info_row.get('authored_date_time') }}
       </div>
@@ -37,7 +37,7 @@
       <div class="text-subtitle-1 mt-5">
         {{ commit_info_row.get('hash').substring(0, 8) }}
         ({{ commit_info_row.get('number_affected_files') }}
-        {{ commit_info_row.get('number_affected_files') > 1 ? 'files' : 'file' }} affected)
+        {{ commit_info_row.get('number_affected_files') > 1 ? 'files' : 'file' }} edited)
       </div>
       <div class="small-caption">
         {{ commit_info_row.get('hash') }}

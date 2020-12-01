@@ -1,26 +1,32 @@
 <template>
   <v-container fluid>
-    <v-row justify="center">
-      <v-col cols="12" md="3">
-        <BranchSelector/>
-      </v-col>
-      <v-col cols="12" md="6" xl="5">
-        <PathSelector/>
-      </v-col>
-    </v-row>
-    <div v-show="show_plot">
-    <CommitPlot/>
-    <v-row align="start" align-self="stretch">
-      <v-col cols="12" md="6">
-        <CommitDetailPanel
-            :commit_info_row="$store.state.selected_commit_detail_data"
-        />
-      </v-col>
-      <v-col cols="12" md="6">
-        <OwnershipPlot/>
-      </v-col>
-    </v-row>
-    </div>
+    <v-col align="center">
+      <v-row justify="center">
+        <v-col cols="12" md="3">
+          <BranchSelector/>
+        </v-col>
+        <v-col cols="12" md="6" xl="5">
+          <PathSelector/>
+        </v-col>
+      </v-row>
+      <div v-show="show_plot">
+        <v-row justify="center">
+          <v-col cols="12" lg="10">
+            <CommitPlot/>
+          </v-col>
+        </v-row>
+        <v-row justify="center">
+          <v-col cols="12" md="5" lg="4">
+            <CommitDetailPanel
+                :commit_info_row="$store.state.selected_commit_detail_data"
+            />
+          </v-col>
+          <v-col cols="12" md="7" lg="6">
+            <OwnershipPlot/>
+          </v-col>
+        </v-row>
+      </div>
+    </v-col>
   </v-container>
 </template>
 

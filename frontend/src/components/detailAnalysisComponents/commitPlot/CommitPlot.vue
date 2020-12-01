@@ -59,8 +59,11 @@ export default {
       entry_history = entry_history.withColumn('scale',
           row => min_size + (max_size - min_size) / (Math.pow(row.get('number_affected_files'), 0.5)));
       entry_history = entry_history.withColumn('description',
-          row => (`${row.get('author')}<br>${row.get('team_display_name')}<br>`
-              + `${row.get('authored_date_time')}<br>------------<br>`
+          row => (`${row.get('author')} (${row.get('team_display_name')})<br>`
+              + `${row.get('authored_date_time')}<br>`
+              + `Edited files: ${row.get('number_affected_files')}<br>`
+              + `Historical file path: ${row.get('new_path')}<br>`
+              + `<br>------------<br>`
               + `${word_wrap(row.get('message'))}`.replace('\n', '<br>')));
 
       const plot_options = {
