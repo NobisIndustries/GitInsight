@@ -1,12 +1,20 @@
 <template>
   <v-card elevation="2" class="pa-3">
-    <Plotly
-        :data="plot_data"
-        :layout="plot_layout"
-        :display-mode-bar="false"
-    ></Plotly>
+    <div class="plot-max-width">
+      <Plotly
+          :data="plot_data"
+          :layout="plot_layout"
+          :display-mode-bar="false"
+      ></Plotly>
+    </div>
   </v-card>
 </template>
+
+<style scoped>
+.plot-max-width {
+  max-width: 900px;
+}
+</style>
 
 <script>
 import {Plotly} from 'vue-plotly';
@@ -19,10 +27,33 @@ export default {
   data() {
     return {
       plot_layout: {
+        width: 900,
         margin: {
           t: 10,
-          b: 10
-        }
+          b: 20,
+          l: 10,
+          r: 10
+        },
+        grid: {rows: 1, columns: 2},
+        legend: {
+          orientation: 'h'
+        },
+        annotations: [
+          {
+            font: {size: 14},
+            showarrow: false,
+            text: 'Raw counts',
+            x: 0.195,
+            y: 0.5
+          },
+          {
+            font: {size: 14},
+            showarrow: false,
+            text: 'Weighted',
+            x: 0.795,
+            y: 0.5
+          }
+        ]
       }
     };
   },
@@ -55,15 +86,14 @@ export default {
             colors: colors,
             line: {
               color: '#ffffff',
-              width: 3
+              width: 2
             },
           },
           type: 'pie',
           name: 'Raw counts',
-          hole: 0.5,
-          direction: 'clockwise',
+          hole: 0.4,
           sort: false,
-          domain: {x: [0.15, 0.85], y: [0.15, 0.85]},
+          domain: {x: [0, 0.49]},
         },
         {
           values: weighted_values.toArray('aggregation'),
@@ -72,14 +102,14 @@ export default {
             colors: colors,
             line: {
               color: '#ffffff',
-              width: 3
+              width: 2
             },
           },
           type: 'pie',
           name: 'Weighted',
-          hole: 0.7,
-          direction: 'clockwise',
+          hole: 0.4,
           sort: false,
+          domain: {x: [0.51, 1]},
         }
       ];
 
