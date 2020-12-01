@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer
+        v-if="show_sidebar"
         v-model="show_sidebar"
         app>
       <v-list>
@@ -29,7 +30,6 @@
       <v-spacer></v-spacer>
       <v-toolbar-items class="hidden-sm-and-down">
         <v-btn
-            flat
             v-for="item in menuItems"
             :key="item.title"
             :to="item.path">
@@ -39,16 +39,16 @@
       </v-toolbar-items>
     </v-app-bar>
 
-    <v-content>
+    <v-main>
       <router-view></router-view>
-    </v-content>
+    </v-main>
 
   </v-app>
 </template>
 
 <script>
 export default {
-  name: "App",
+  name: 'App',
   data() {
     return {
       app_title: 'GitInsight',
@@ -62,6 +62,3 @@ export default {
   },
 };
 </script>
-<style>
-
-</style>
