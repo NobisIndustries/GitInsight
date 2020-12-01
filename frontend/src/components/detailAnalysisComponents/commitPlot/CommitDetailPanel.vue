@@ -22,10 +22,10 @@
             )
           </div>
           <div class="ml-5">
-            <div>
+            <div v-if="commit_info_row.get('person_description') !== ''">
               {{ commit_info_row.get('person_description') }}
             </div>
-            <div>
+            <div v-if="commit_info_row.get('team_description') !== ''">
               {{ commit_info_row.get('team_description') }}
             </div>
           </div>
