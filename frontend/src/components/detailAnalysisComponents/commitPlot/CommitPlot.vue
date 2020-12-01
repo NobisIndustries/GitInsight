@@ -1,6 +1,7 @@
 <template>
   <v-card elevation="2" class="pt-3">
     <v-col align="center">
+      <div class="text-h5 pb-2">File Operations</div>
       <PlotBySelector
           @change="selected_plot_type = $event"
       ></PlotBySelector>

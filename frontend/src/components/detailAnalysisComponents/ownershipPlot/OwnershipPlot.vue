@@ -1,5 +1,6 @@
 <template>
   <v-card elevation="2" class="pa-3">
+    <div class="text-h5">Ownership</div>
     <div class="plot-max-width">
       <Plotly
           :data="plot_data"
