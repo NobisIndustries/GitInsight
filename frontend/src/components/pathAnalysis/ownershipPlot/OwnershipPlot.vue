@@ -8,10 +8,6 @@
   </v-card>
 </template>
 
-<style scoped>
-
-</style>
-
 <script>
 import {Plotly} from 'vue-plotly';
 

@@ -36,10 +36,10 @@
       </div>
       <div class="text-subtitle-1 mt-5">
         {{ commit_info_row.get('hash').substring(0, 8) }}
-        ({{ commit_info_row.get('number_affected_files')}}
-        {{ commit_info_row.get('number_affected_files') > 1? 'files': 'file'}} affected)
+        ({{ commit_info_row.get('number_affected_files') }}
+        {{ commit_info_row.get('number_affected_files') > 1 ? 'files' : 'file' }} affected)
       </div>
-      <div class="small-hash">
+      <div class="small-caption">
         {{ commit_info_row.get('hash') }}
       </div>
       <div class="ml-5 preserve-whitespace">{{ commit_info_row.get('message').trim() }}</div>
@@ -51,10 +51,7 @@
 </template>
 
 <style scoped>
-.preserve-whitespace {
-  white-space: pre;
-}
-.small-hash {
+.small-caption {
   color: var(--v-secondary-lighten4);
   font-size: 70%;
 }

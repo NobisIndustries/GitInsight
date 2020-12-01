@@ -1,8 +1,9 @@
 <template>
   <div class="autocomplete">
-    <v-text-field
-        :label="label_text"
+    <input
+        :placeholder="label_text"
         v-model="search"
+        class="autocomplete-input"
         @input="on_change()"
         @keydown.down="on_arrow_down()"
         @keydown.up="on_arrow_up()"
@@ -10,7 +11,7 @@
         @focus="on_focus()"
         @blur="on_defocus()"
         autocomplete="off"
-    ></v-text-field>
+    >
     <ul
         v-show="is_open"
         class="autocomplete-results"
@@ -24,6 +25,10 @@
           v-html="style_result(result)"
       >
       </li>
+    <div
+        v-if="results.length === 0" class="autocomplete-not-found">
+      No results found...
+    </div>
     </ul>
   </div>
 </template>
@@ -31,13 +36,29 @@
 <style>
 .autocomplete {
   position: relative;
+  margin: 0.5rem;
+}
+
+.autocomplete-input {
+  width: 100%;
+  color: var(--v-primary-base);
+}
+
+.autocomplete-input::placeholder {
+  color: var(--v-primary-base);
+  opacity: 0.5;
+}
+
+.autocomplete-input:focus {
+  outline: none;
 }
 
 .autocomplete-results {
+  margin-top: 1rem;
   padding: 0.5rem !important;
-  margin: 0.5rem;
   background-color: #ffffff;
   border: 0.02rem solid var(--v-secondary-lighten1);
+  border-radius: 0.3rem;
   overflow: auto;
   position: absolute;
   z-index: 1000;
@@ -49,6 +70,7 @@
   text-align: left;
   padding: 0.5rem;
   cursor: pointer;
+  border-radius: 0.3rem;
 }
 
 .autocomplete-result.is-active,
@@ -59,6 +81,12 @@
 .autocomplete_highlight {
   font-weight: bold;
   color: var(--v-primary-base);
+}
+
+.autocomplete-not-found {
+  color: var(--v-secondary-lighten4);
+  font-size: 85%;
+  font-style: italic;
 }
 </style>
 
@@ -91,6 +119,7 @@ export default {
   data() {
     return {
       search: this.initial_value,
+      triggered_from_result_select: false,
       results: [],
       is_open: false,
       arrow_counter: 0,
@@ -108,6 +137,7 @@ export default {
     set_result(result) {
       this.search = result;
       this.is_open = false;
+      this.triggered_from_result_select = true;
     },
     style_result(entry) {
       return style(entry, this.search)
@@ -125,8 +155,7 @@ export default {
     on_enter() {
       if (!this.is_open)
         return;
-      this.search = this.results[this.arrow_counter];
-      this.is_open = false;
+      this.set_result(this.results[this.arrow_counter]);
       this.arrow_counter = 0;
     },
     on_focus() {
@@ -140,7 +169,11 @@ export default {
   },
   watch: {
     search() {
-      this.$emit('change', this.search);
+      this.$emit('change', {
+            search_term: this.search,
+            triggered_from_result_select: this.triggered_from_result_select
+          });
+      this.triggered_from_result_select = false;
     }
   },
 }

@@ -1,10 +1,10 @@
 <template>
-  <div class="d-flex flex-row align-center">
+  <div class="search-box">
     <AutoComplete
         :initial_value="$store.state.current_entry_path"
         :available_elements="$store.state.available_entry_paths_of_current_branch"
         label_text="Search file or directory..."
-        @change="new_path = $event"
+        @change="search_change($event)"
         class="flex-grow-0 flex-shrink-1 full-width"
     />
     <v-btn
@@ -36,8 +36,14 @@
 </template>
 
 <style scoped>
-.full-width {
-  width: 100%;
+.search-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  border: 0.05rem solid var(--v-primary-base);
+  border-radius: 20rem;
+  padding-left: 1rem;
 }
 </style>
 
@@ -58,6 +64,11 @@ export default {
     };
   },
   methods: {
+    search_change({search_term, triggered_from_result_select}) {
+      this.new_path = search_term;
+      if (triggered_from_result_select)
+        this.load_entry();
+    },
     async load_entry() {
       await this.$store.dispatch('load_info_of_entry', this.new_path, this.limit_results_to);
 
