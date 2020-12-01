@@ -1,21 +1,24 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Main from "@/views/Main";
+import Vue from 'vue';
+import Router from 'vue-router';
 
-Vue.use(VueRouter)
+const router_options = [
+  { path: '/', component: 'Landing' },
+  { path: '/details', component: 'DetailAnalysis' },
+  { path: '/overview', component: 'OverviewAnalysis' },
+  { path: '/configuration', component: 'Configuration', meta: { requiresAuth: true } },
+  { path: '*', component: 'NotFound' }
+];
 
-const routes = [
-  {
-    path: '/',
-    name: 'Main',
-    component: Main
-  },
-]
+const routes = router_options.map(route => {
+  return {
+    ...route,
+    component: () => import(`../views/${route.component}.vue`)
+  };
+});
 
-const router = new VueRouter({
+Vue.use(Router);
+
+export default new Router({
   mode: 'history',
-  base: process.env.BASE_URL,
   routes
-})
-
-export default router
+});

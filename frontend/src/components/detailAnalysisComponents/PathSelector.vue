@@ -48,7 +48,7 @@
 </style>
 
 <script>
-import AutoComplete from "@/components/common/AutoComplete";
+import AutoComplete from "@/components/commonComponents/AutoComplete";
 
 export default {
   name: 'PathSelector',

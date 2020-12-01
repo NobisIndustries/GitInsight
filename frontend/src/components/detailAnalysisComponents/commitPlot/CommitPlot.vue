@@ -16,7 +16,7 @@
 
 <script>
 import {Plotly} from 'vue-plotly';
-import PlotBySelector from "@/components/pathAnalysis/commitPlot/PlotBySelector";
+import PlotBySelector from "@/components/detailAnalysisComponents/commitPlot/PlotBySelector";
 
 export default {
   name: 'CommitPlot',

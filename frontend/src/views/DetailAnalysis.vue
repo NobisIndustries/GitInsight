@@ -1,5 +1,5 @@
 <template>
-  <v-col>
+  <v-container fluid>
     <v-row justify="center">
       <v-col cols="12" md="3">
         <BranchSelector/>
@@ -21,15 +21,15 @@
       </v-col>
     </v-row>
     </div>
-  </v-col>
+  </v-container>
 </template>
 
 <script>
-import BranchSelector from '@/components/pathAnalysis/BranchSelector.vue';
-import PathSelector from '@/components/pathAnalysis/PathSelector.vue';
-import CommitPlot from "@/components/pathAnalysis/commitPlot/CommitPlot";
-import OwnershipPlot from "@/components/pathAnalysis/ownershipPlot/OwnershipPlot";
-import CommitDetailPanel from "@/components/pathAnalysis/commitPlot/CommitDetailPanel";
+import BranchSelector from '@/components/detailAnalysisComponents/BranchSelector.vue';
+import PathSelector from '@/components/detailAnalysisComponents/PathSelector.vue';
+import CommitPlot from "@/components/detailAnalysisComponents/commitPlot/CommitPlot";
+import OwnershipPlot from "@/components/detailAnalysisComponents/ownershipPlot/OwnershipPlot";
+import CommitDetailPanel from "@/components/detailAnalysisComponents/commitPlot/CommitDetailPanel";
 
 export default {
   name: 'PathAnalyze',
