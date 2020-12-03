@@ -11,7 +11,7 @@ from bidict import bidict
 from sqlalchemy.exc import OperationalError
 
 import db_schema as db
-from helpers import get_repo_path
+from helpers.path_helpers import get_repo_path
 
 
 class Commit:

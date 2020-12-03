@@ -1,6 +1,6 @@
 import unittest
 
-from queries.repo_overview_queries import OverviewTreeElement
+from queries.sub_queries.repo_overview_queries import OverviewTreeElement
 
 
 class OverviewTreeElementTest(unittest.TestCase):

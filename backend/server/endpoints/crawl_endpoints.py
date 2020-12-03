@@ -3,7 +3,7 @@ import threading
 from fastapi import APIRouter, HTTPException
 
 from git_crawler import CommitCrawler
-from helpers import get_repo_path
+from helpers.path_helpers import get_repo_path
 
 
 router = APIRouter()

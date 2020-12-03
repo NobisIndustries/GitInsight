@@ -8,6 +8,10 @@ import db_schema as db
 from constants import PATH_SPLIT_CHAR
 
 
+NO_BEST_TEAM = 'Inconclusive'
+NO_BEST_TEAM_COLOR = '#eeeeee'
+
+
 class RepoOverviewQueries:
     WEIGHT_FIRST_COMMIT = 0.5  # First commit is worth this fraction compared to the most recent one
 
@@ -16,26 +20,8 @@ class RepoOverviewQueries:
         self._branch_info_provider = branch_info_provider
         self._author_info_provider = author_info_provider
 
-    def get_treemap_data(self, branch: str, max_depth=3, last_days=None):
-        min_ts = time.time() - (24 * 3600 * last_days) if last_days else 0
-        relevant_commits_query = self._session.query(db.SqlCommitMetadata.hash, db.SqlCommitMetadata.author,
-                                                     db.SqlCommitMetadata.number_affected_files,
-                                                     db.SqlCommitMetadata.authored_timestamp) \
-            .filter(db.SqlCommitMetadata.authored_timestamp >= min_ts).subquery()
-
-        relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path) \
-            .filter(db.SqlCurrentFileInfo.branch == branch).subquery()
-
-        query = self._session.query(
-            db.SqlAffectedFile.file_id,
-            relevant_commits_query.c.author,
-            relevant_commits_query.c.hash,
-            relevant_commits_query.c.number_affected_files,
-            relevant_commits_query.c.authored_timestamp,
-            relevant_files_query.c.current_path) \
-            .join(relevant_commits_query) \
-            .join(relevant_files_query).statement
-        data = pd.read_sql(query, self._session.bind)
+    def calculate_count_and_best_team_of_dir(self, branch: str, max_depth=3, last_days=None):
+        data = self.__query_data(branch, last_days)
 
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
 
@@ -52,6 +38,26 @@ class RepoOverviewQueries:
 
         return results
 
+    def __query_data(self, branch, last_days):
+        min_ts = time.time() - (24 * 3600 * last_days) if last_days else 0
+        relevant_commits_query = self._session.query(db.SqlCommitMetadata.hash, db.SqlCommitMetadata.author,
+                                                     db.SqlCommitMetadata.number_affected_files,
+                                                     db.SqlCommitMetadata.authored_timestamp) \
+            .filter(db.SqlCommitMetadata.authored_timestamp >= min_ts).subquery()
+        relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path) \
+            .filter(db.SqlCurrentFileInfo.branch == branch).subquery()
+        query = self._session.query(
+            db.SqlAffectedFile.file_id,
+            relevant_commits_query.c.author,
+            relevant_commits_query.c.hash,
+            relevant_commits_query.c.number_affected_files,
+            relevant_commits_query.c.authored_timestamp,
+            relevant_files_query.c.current_path) \
+            .join(relevant_commits_query) \
+            .join(relevant_files_query).statement
+        data = pd.read_sql(query, self._session.bind)
+        return data
+
     def __calculate_metrics(self, data, max_depth):
         root_element = self.__build_tree(data, max_depth)
         counts = {}
@@ -60,6 +66,8 @@ class RepoOverviewQueries:
         root_element.calculate_best_team(best_teams)
 
         results = pd.DataFrame.from_dict({'edit_count': counts, 'best_team': best_teams})
+        results['dir_path'] = results.index
+        results.reset_index(inplace=True, drop=True)
         return results
 
     def __insert_team_name(self, data):
@@ -81,8 +89,8 @@ class RepoOverviewQueries:
         teams_info = self._author_info_provider.get_all_teams_data()
         teams_info = teams_info.loc[:, ['team_display_name', 'team_display_color']]
         teams_info = teams_info.append(
-            {'team_display_name': OverviewTreeElement.NO_BEST_TEAM,
-             'team_display_color': OverviewTreeElement.NO_BEST_TEAM_COLOR},
+            {'team_display_name': NO_BEST_TEAM,
+             'team_display_color': NO_BEST_TEAM_COLOR},
             ignore_index=True)
         data = pd.merge(data, teams_info, left_on='best_team', right_on='team_display_name')
         del data['team_display_name']
@@ -90,8 +98,6 @@ class RepoOverviewQueries:
 
 
 class OverviewTreeElement:
-    NO_BEST_TEAM = 'Inconclusive'
-    NO_BEST_TEAM_COLOR = '#eeeeee'
 
     def __init__(self, path_elements, max_level=3):
         self._path_elements = path_elements
@@ -162,4 +168,4 @@ class OverviewTreeElement:
         ranked = sorted(contribution_ratio.items(), key=lambda item: item[1], reverse=True)
         if ranked[0][1] - ranked[1][1] >= threshold:  # Structure like [('best_team_name', 0.4), ('second_best', 0.1)]
             return ranked[0][0]
-        return self.NO_BEST_TEAM
+        return NO_BEST_TEAM

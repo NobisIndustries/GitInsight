@@ -8,10 +8,10 @@ import git
 import pandas as pd
 
 import db_schema as db
-from helpers import get_repo_path, get_authors_path, get_teams_path
-from queries.file_operation_queries import FileOperationQueries
-from queries.general_info_queries import GeneralInfoQueries
-from queries.repo_overview_queries import RepoOverviewQueries
+from helpers.path_helpers import get_repo_path, get_authors_path, get_teams_path
+from queries.sub_queries.file_operation_queries import FileOperationQueries
+from queries.sub_queries.general_info_queries import GeneralInfoQueries
+from queries.sub_queries.repo_overview_queries import RepoOverviewQueries
 
 
 class AuthorInfoProvider:
@@ -67,7 +67,6 @@ class BranchInfoProvider:
         hashes_in_branch = self._get_hashes_in_branch(branch)
         return data.loc[data.hash.isin(hashes_in_branch)]
 
-
     @functools.lru_cache(maxsize=10)
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
         return self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
@@ -90,4 +89,4 @@ if __name__ == '__main__':
     #print(q.general_info.get_all_branches())
     #print(q.general_info.get_all_paths_in_branch('master'))
     print(q.file_operations.get_history_of_path('Python/', 'master'))
-    print(q.overview.get_treemap_data('master'))
+    print(q.overview.calculate_count_and_best_team_of_dir('master'))
