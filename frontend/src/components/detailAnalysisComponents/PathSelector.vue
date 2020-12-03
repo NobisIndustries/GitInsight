@@ -1,8 +1,8 @@
 <template>
   <div class="search-box">
     <AutoComplete
-        :initial_value="$store.state.current_entry_path"
-        :available_elements="$store.state.available_entry_paths_of_current_branch"
+        :initial_value="$store.state.entry_details.current_entry_path"
+        :available_elements="$store.state.entry_details.available_entry_paths_of_current_branch"
         label_text="Search file or directory..."
         @change="search_change($event)"
         class="flex-grow-0 flex-shrink-1 full-width"
@@ -11,8 +11,8 @@
         @click="load_entry()"
         color="primary"
         icon
-        :loading="$store.state.history_is_loading"
-        :disabled="$store.state.history_is_loading || new_path === ''"
+        :loading="$store.state.entry_details.history_is_loading"
+        :disabled="$store.state.entry_details.history_is_loading || new_path === ''"
     >
       <v-icon>mdi-magnify</v-icon>
     </v-btn>

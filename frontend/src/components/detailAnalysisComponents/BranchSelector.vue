@@ -1,7 +1,7 @@
 <template>
   <v-select
-    :value="$store.state.current_branch"
-    :items="$store.state.available_branches"
+    :value="$store.state.common.current_branch"
+    :items="$store.state.common.available_branches"
     @change="switch_branch($event)"
     label="Branches"
   ></v-select>

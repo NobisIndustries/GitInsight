@@ -18,7 +18,7 @@
         <v-row justify="center">
           <v-col cols="12" md="5" lg="4">
             <CommitDetailPanel
-                :commit_info_row="$store.state.selected_commit_detail_data"
+                :commit_info_row="$store.state.entry_details.selected_commit_detail_data"
             />
           </v-col>
           <v-col cols="12" md="7" lg="6">
@@ -49,7 +49,7 @@ export default {
   mounted() {
     let branches_request = this.$store.dispatch('load_branches');
     branches_request.then(() => {
-      let available_branches = this.$store.state.available_branches;
+      let available_branches = this.$store.state.common.available_branches;
       let standard_branch = available_branches[0];
       if (available_branches.indexOf('master') > -1)
         standard_branch = 'master';
@@ -58,7 +58,7 @@ export default {
   },
   computed: {
     show_plot() {
-      return this.$store.state.current_entry_history !== null;
+      return this.$store.state.entry_details.current_entry_history !== null;
     },
   }
 }
