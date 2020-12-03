@@ -41,6 +41,10 @@ export default new Vuex.Store({
     },
     set_history_is_loading(state, is_loading) {
       state.history_is_loading = is_loading;
+    },
+    reset_entry_data(state) {
+      state.current_entry_history = null;
+      state.selected_commit_detail_data = null;
     }
   },
   getters: {
@@ -69,6 +73,7 @@ export default new Vuex.Store({
         let entries = JSON.parse(response.data);
         entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         context.commit('set_available_entries', entries);
+        context.commit('reset_entry_data');
       });
       return request;
     },
