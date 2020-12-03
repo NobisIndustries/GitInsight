@@ -28,8 +28,6 @@ class OverviewTreeElementTest(unittest.TestCase):
 
         expected = {
             '': 'team_a',
-            'a.json': 'team_a',
-            'b.txt': 'Inconclusive',
             'src': 'team_a',
             'src/sub_dir': 'team_b',
             'src/other_dir': 'team_a',
@@ -48,8 +46,6 @@ class OverviewTreeElementTest(unittest.TestCase):
 
         expected = {
             '': 10,
-            'a.json': 1,
-            'b.txt': 2,
             'src': 6,
             'src/sub_dir': 5,
             'src/other_dir': 1,

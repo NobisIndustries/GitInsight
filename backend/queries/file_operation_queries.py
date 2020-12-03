@@ -25,30 +25,26 @@ class FileOperationQueries:
             relevant_files_query.c.current_path) \
             .join(relevant_files_query) \
             .join(db.SqlCommitMetadata).statement
-        result = pd.read_sql(query, self._session.bind)
-        if result.empty:
+        data = pd.read_sql(query, self._session.bind)
+        if data.empty:
             return None
 
-        result = self.__discard_commits_not_in_branch(branch, result)
-        result = self.__add_readable_authored_date(result)
-        result = self.__add_author_and_team_info(result)
+        data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
+        data = self.__add_readable_authored_date(data)
+        data = self.__add_author_and_team_info(data)
 
-        result.sort_values('authored_timestamp', ascending=False, inplace=True)
-        result.reset_index(inplace=True, drop=True)
-        result['index'] = result.index
-        return result
+        data.sort_values('authored_timestamp', ascending=False, inplace=True)
+        data.reset_index(inplace=True, drop=True)
+        data['index'] = data.index
+        return data
 
     def __add_readable_authored_date(self, result):
         date_time = pd.to_datetime(result.authored_timestamp, unit='s')
         result['authored_date_time'] = date_time.dt.strftime('%Y-%m-%d %H:%M:%S')
         return result
 
-    def __add_author_and_team_info(self, result):
+    def __add_author_and_team_info(self, data):
         author_column_name = db.SqlCommitMetadata.author.name
-        infos = self._author_info_provider.get_infos_from_names(result[author_column_name])
-        result = pd.merge(result, infos, on=author_column_name)
-        return result
-
-    def __discard_commits_not_in_branch(self, branch, result):
-        hashes_in_branch = self._branch_info_provider.get_hashes_in_branch(branch)
-        return result.loc[result.hash.isin(hashes_in_branch)]
+        infos = self._author_info_provider.add_info_to_author_names(data[author_column_name])
+        data = pd.merge(data, infos, on=author_column_name)
+        return data

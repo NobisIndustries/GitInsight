@@ -9,6 +9,8 @@ from constants import PATH_SPLIT_CHAR
 
 
 class RepoOverviewQueries:
+    WEIGHT_FIRST_COMMIT = 0.5  # First commit is worth this fraction compared to the most recent one
+
     def __init__(self, db_session, branch_info_provider, author_info_provider):
         self._session = db_session
         self._branch_info_provider = branch_info_provider
@@ -35,48 +37,61 @@ class RepoOverviewQueries:
             .join(relevant_files_query).statement
         data = pd.read_sql(query, self._session.bind)
 
-        data = self.__discard_commits_not_in_branch(branch, data)
+        data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
 
         data = self.__insert_team_name(data)
         min_ts = data.authored_timestamp.min()
         max_ts = data.authored_timestamp.max()
-        data['weighted'] = np.sqrt(1 / data.number_affected_files) * (
-                    0.5 + 0.5 * (data.authored_timestamp - min_ts) / (max_ts - min_ts))
+        weight_by_number_files = np.sqrt(1 / data.number_affected_files)
+        weight_by_commit_age = (self.WEIGHT_FIRST_COMMIT + (1 - self.WEIGHT_FIRST_COMMIT) *
+                                (data.authored_timestamp - min_ts) / (max_ts - min_ts))
+        data['weighted'] = weight_by_number_files * weight_by_commit_age
 
-        counts = self.calculate_metrics(data)
+        results = self.__calculate_metrics(data, max_depth)
+        results = self.__insert_team_color(results)
 
-        return counts
+        return results
 
-    def calculate_metrics(self, data):
-        root_element = self.__build_tree(data)
+    def __calculate_metrics(self, data, max_depth):
+        root_element = self.__build_tree(data, max_depth)
         counts = {}
         root_element.calculate_edit_count(counts)
         best_teams = {}
         root_element.calculate_best_team(best_teams)
-        return counts, best_teams
 
-    def __build_tree(self, data):
-        root_element = OverviewTreeElement([], 2)
-        relevant_columns = zip(data.current_path.tolist(), data.team_display_name.tolist(), data.weighted.tolist())
-        for current_path, team_name, weighted in relevant_columns:  # Pandas .iterrows() is very slow
-            root_element.add_entry(current_path.split(PATH_SPLIT_CHAR), team_name, weighted)
-        return root_element
+        results = pd.DataFrame.from_dict({'edit_count': counts, 'best_team': best_teams})
+        return results
 
     def __insert_team_name(self, data):
         author_column_name = db.SqlCommitMetadata.author.name
-        infos = self._author_info_provider.get_infos_from_names(data[author_column_name])
+        infos = self._author_info_provider.add_info_to_author_names(data[author_column_name])
         infos = infos.loc[:, [author_column_name, 'team_display_name']]
         data = pd.merge(data, infos, on=author_column_name)
         del data[author_column_name]
         return data
 
-    def __discard_commits_not_in_branch(self, branch, result):
-        hashes_in_branch = self._branch_info_provider.get_hashes_in_branch(branch)
-        return result.loc[result.hash.isin(hashes_in_branch)]
+    def __build_tree(self, data, max_depth):
+        root_element = OverviewTreeElement([], max_depth)
+        relevant_columns = zip(data.current_path.tolist(), data.team_display_name.tolist(), data.weighted.tolist())
+        for current_path, team_name, weighted in relevant_columns:  # Pandas .iterrows() is too slow
+            root_element.add_entry(current_path.split(PATH_SPLIT_CHAR), team_name, weighted)
+        return root_element
+
+    def __insert_team_color(self, data):
+        teams_info = self._author_info_provider.get_all_teams_data()
+        teams_info = teams_info.loc[:, ['team_display_name', 'team_display_color']]
+        teams_info = teams_info.append(
+            {'team_display_name': OverviewTreeElement.NO_BEST_TEAM,
+             'team_display_color': OverviewTreeElement.NO_BEST_TEAM_COLOR},
+            ignore_index=True)
+        data = pd.merge(data, teams_info, left_on='best_team', right_on='team_display_name')
+        del data['team_display_name']
+        return data
 
 
 class OverviewTreeElement:
     NO_BEST_TEAM = 'Inconclusive'
+    NO_BEST_TEAM_COLOR = '#eeeeee'
 
     def __init__(self, path_elements, max_level=3):
         self._path_elements = path_elements
@@ -92,7 +107,9 @@ class OverviewTreeElement:
 
     def add_entry(self, entry_path_elements, team_name, score):
         current_level = len(self._path_elements)
-        if (len(entry_path_elements) == current_level) or (self._max_level == current_level):
+        if (len(entry_path_elements) == current_level
+                or (self._max_level == current_level)
+                or self.__is_child_a_file(entry_path_elements, current_level)):
             self._team_scores[team_name] += score
             self._edit_count += 1
         else:
@@ -101,6 +118,9 @@ class OverviewTreeElement:
             if next_level_path not in self._children:
                 self._children[next_level_path] = OverviewTreeElement(next_level_elements, self._max_level)
             self._children[next_level_path].add_entry(entry_path_elements, team_name, score)
+
+    def __is_child_a_file(self, entry_path_elements, current_level):
+        return len(entry_path_elements) == current_level + 1  # Git does not have directories as final element in a path
 
     def calculate_edit_count(self, edit_count_store):
         if self._edit_count_cached:

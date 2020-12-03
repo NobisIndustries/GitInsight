@@ -37,7 +37,7 @@ class AuthorInfoProvider:
             self._teams = json.load(f)
             self._teams[self.UNKNOWN_TEAM_ID] = self.UNKNOWN_TEAM_INFO
 
-    def get_infos_from_names(self, names: Iterable[str]):
+    def add_info_to_author_names(self, names: Iterable[str]) -> pd.DataFrame:
         additional_data = []
         for name in set(names):
             person_info = self._authors.get(name, self.UNKNOWN_PERSON_INFO)
@@ -52,13 +52,24 @@ class AuthorInfoProvider:
             additional_data.append(info)
         return pd.DataFrame(additional_data)
 
+    def get_all_teams_data(self) -> pd.DataFrame:
+        info = pd.DataFrame(self._teams).transpose()
+        info['team_name'] = info.index
+        info.reset_index(inplace=True, drop=True)
+        return info
+
 
 class BranchInfoProvider:
     def __init__(self, git_repo):
         self._repo = git_repo
 
+    def filter_for_commits_in_branch(self, data: pd.DataFrame, branch: str):
+        hashes_in_branch = self._get_hashes_in_branch(branch)
+        return data.loc[data.hash.isin(hashes_in_branch)]
+
+
     @functools.lru_cache(maxsize=10)
-    def get_hashes_in_branch(self, branch: str) -> List[str]:
+    def _get_hashes_in_branch(self, branch: str) -> List[str]:
         return self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
 
 
