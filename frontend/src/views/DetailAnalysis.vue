@@ -53,13 +53,19 @@ export default {
       let standard_branch = available_branches[0];
       if (available_branches.indexOf('master') > -1)
         standard_branch = 'master';
-      this.$store.dispatch('switch_branch', standard_branch);
+      this.$store.commit('set_current_branch', standard_branch);
+      this.$store.dispatch()
     });
   },
   computed: {
     show_plot() {
       return this.$store.state.entry_details.current_entry_history !== null;
     },
+  },
+  watch: {
+    '$store.state.common.current_branch': function() {
+      this.$store.dispatch('load_available_entry_paths');
+    }
   }
 }
 </script>

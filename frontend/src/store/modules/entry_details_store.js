@@ -45,11 +45,23 @@ export const entry_details_store = {
         },
     },
     actions: {
+        load_available_entry_paths(context) {
+            const branch = context.rootState.common.current_branch;
+            let url = `${API_BASE_PATH}/entries/availableEntries/${btoa(branch)}`;
+            let request = axios.get(url).then(response => {
+                let entries = JSON.parse(response.data);
+                entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                context.commit('set_available_entries', entries);
+                context.commit('reset_entry_data');
+            });
+            return request;
+        },
         load_info_of_entry(context, entry_path, limit_results_to) {
             context.commit('set_history_is_loading', true);
             context.commit('set_current_entry_path', entry_path);
 
-            let url = `${API_BASE_PATH}/entries/history/${btoa(context.rootState.common.current_branch)}/${btoa(entry_path)}`;
+            const branch = context.rootState.common.current_branch;
+            let url = `${API_BASE_PATH}/entries/history/${btoa(branch)}/${btoa(entry_path)}`;
             let request = axios.get(url, {params: {limit: limit_results_to}}).then(response => {
                 context.commit('set_current_entry_history', JSON.parse(response.data));
                 context.commit('set_history_is_loading', false);

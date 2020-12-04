@@ -23,17 +23,5 @@ export const common_store = {
             });
             return request;
         },
-        switch_branch(context, new_branch) {
-            context.commit('set_current_branch', new_branch);
-
-            let url = `${API_BASE_PATH}/entries/availableEntries/${btoa(new_branch)}`;
-            let request = axios.get(url).then(response => {
-                let entries = JSON.parse(response.data);
-                entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-                context.commit('set_available_entries', entries);
-                context.commit('reset_entry_data');
-            });
-            return request;
-        }
     }
 };
