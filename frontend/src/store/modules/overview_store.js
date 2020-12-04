@@ -34,7 +34,8 @@ export const overview_store = {
         load_count_and_team_of_dirs(context) {
             context.commit('set_count_and_team_is_loading', true);
 
-            let url = `${API_BASE_PATH}/overview/count_and_team_of_dirs/${btoa(context.rootState.common.current_branch)}`;
+            const branch = context.rootState.common.current_branch;
+            let url = `${API_BASE_PATH}/overview/count_and_team_of_dirs/${btoa(branch)}`;
             let request = axios.get(url, {params: {last_days: context.state.last_days}}).then(response => {
                 context.commit('set_count_and_team_of_dirs_data', JSON.parse(response.data));
                 context.commit('set_count_and_team_is_loading', false);
