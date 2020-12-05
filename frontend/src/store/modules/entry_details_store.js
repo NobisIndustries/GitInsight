@@ -38,9 +38,9 @@ export const entry_details_store = {
             // If we simply persisted the already initialized DataFrame in the store and use it in our modules,
             // all mutations would affect the same instance and trigger infinite loops. Even though the dataframe-js
             // doc explicitly states that a DataFrame is immutable...
-            let history = state.current_entry_history;
-            if(history)
-                return new DataFrame(history);
+            let data = state.current_entry_history;
+            if(data)
+                return new DataFrame(data);
             return null;
         },
     },
