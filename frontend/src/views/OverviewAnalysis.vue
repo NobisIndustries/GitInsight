@@ -11,7 +11,7 @@
       </v-row>
       <v-row justify="center">
         <v-col cols="12" lg="10">
-        <OverviewTreeMap/>
+          <OverviewTreeMap/>
         </v-col>
       </v-row>
     </v-col>
@@ -35,8 +35,13 @@ export default {
     },
     '$store.state.overview.last_days': function () {
       this.$store.dispatch('load_count_and_team_of_dirs');
-    }
-  }
+    },
+  },
+  mounted() {
+    if(!this.$store.state.common.current_branch)
+      return;  // Branch not set - the loading will be triggered by watch once the BranchSelector has finished loading
+    this.$store.dispatch('load_count_and_team_of_dirs');
+  },
 }
 </script>
 

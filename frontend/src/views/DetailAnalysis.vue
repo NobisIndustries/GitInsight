@@ -52,9 +52,14 @@ export default {
     },
   },
   watch: {
-    '$store.state.common.current_branch': function() {
+    '$store.state.common.current_branch': function () {
       this.$store.dispatch('load_available_entry_paths');
-    }
+    },
+  },
+  mounted() {
+    if(!this.$store.state.common.current_branch)
+      return;  // Branch not set - the loading will be triggered by watch once the BranchSelector has finished loading
+    this.$store.dispatch('load_available_entry_paths');
   }
 }
 </script>
