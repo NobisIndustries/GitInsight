@@ -3,6 +3,7 @@
     <v-col align="center">
       <div class="text-h5 pb-2">File Operations</div>
       <PlotBySelector
+          :options="plot_by_options"
           @change="selected_plot_type = $event"
       ></PlotBySelector>
       <Plotly
@@ -17,7 +18,7 @@
 
 <script>
 import {Plotly} from 'vue-plotly';
-import PlotBySelector from "@/components/detailAnalysisComponents/commitPlot/PlotBySelector";
+import PlotBySelector from "@/components/commonComponents/PlotBySelector";
 
 export default {
   name: 'CommitPlot',
@@ -28,6 +29,11 @@ export default {
   data() {
     return {
       selected_plot_type: undefined,
+      plot_by_options: [
+        {key: 'authors', text: 'Authors'},
+        {key: 'files', text: 'Files'},
+        {key: 'renames', text: 'Moves & Renames'},
+      ],
       clicked_commit_info: null,
       plot_layout: {
         hovermode: 'closest',

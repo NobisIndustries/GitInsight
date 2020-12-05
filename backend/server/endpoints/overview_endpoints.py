@@ -15,6 +15,6 @@ async def get_count_and_best_team_of_dir(branch_base64: str, last_days=None):
     branch = decode(branch_base64)
     if last_days:
         last_days = int(last_days)
-    data = queries.overview.calculate_count_and_best_team_of_dir(branch, last_days=last_days)
-    json = data.to_json(orient='values', force_ascii=False)
+    data = queries.overview.calculate_count_and_best_team_of_dir(branch, last_days=last_days, max_depth=5)
+    json = data.to_json(orient='records', force_ascii=False)
     return deescape_forward_slashes(json)

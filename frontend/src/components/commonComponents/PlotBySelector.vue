@@ -4,14 +4,12 @@
       @change="send_change()"
       mandatory
   >
-    <v-btn small>
-     Authors
-    </v-btn>
-    <v-btn small>
-      Files
-    </v-btn>
-    <v-btn small>
-      Moves & Renames
+    <v-btn
+        small
+        v-for="option in options"
+        :key="option.key"
+    >
+      {{ option.text }}
     </v-btn>
   </v-btn-toggle>
 
@@ -21,6 +19,9 @@
 <script>
 export default {
   name: 'PlotBySelector',
+  props: {
+    options: Array
+  },
   data() {
     return {
       selected: undefined,
@@ -28,8 +29,7 @@ export default {
   },
   methods: {
     send_change() {
-      const options = {0: 'authors', 1: 'files', 2: 'renames'};
-      this.$emit('change', options[this.selected]);
+      this.$emit('change', this.options[this.selected].key);
     }
   }
 

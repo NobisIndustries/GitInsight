@@ -6,7 +6,12 @@
           <BranchSelector/>
         </v-col>
         <v-col cols="12" md="3">
-          <DaysSelector />
+          <DaysSelector/>
+        </v-col>
+      </v-row>
+      <v-row justify="center">
+        <v-col cols="12" lg="10">
+        <OverviewTreeMap/>
         </v-col>
       </v-row>
     </v-col>
@@ -16,10 +21,11 @@
 <script>
 import BranchSelector from "@/components/detailAnalysisComponents/BranchSelector";
 import DaysSelector from "@/components/overviewComponents/DaysSelector";
+import OverviewTreeMap from "@/components/overviewComponents/treeMap/OverviewTreeMap";
 
 export default {
   name: "OverviewAnalysis",
-  components: {DaysSelector, BranchSelector},
+  components: {OverviewTreeMap, DaysSelector, BranchSelector},
   data() {
     return {};
   },
