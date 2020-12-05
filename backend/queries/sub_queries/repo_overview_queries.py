@@ -21,7 +21,7 @@ class RepoOverviewQueries:
         self._author_info_provider = author_info_provider
 
     def calculate_count_and_best_team_of_dir(self, branch: str, max_depth=3, last_days=None):
-        data = self.__query_data(branch, last_days)
+        data = self._query_data(branch, last_days)
 
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
 
@@ -38,7 +38,7 @@ class RepoOverviewQueries:
 
         return results
 
-    def __query_data(self, branch, last_days):
+    def _query_data(self, branch, last_days):
         min_ts = time.time() - (24 * 3600 * last_days) if last_days else 0
         relevant_commits_query = self._session.query(db.SqlCommitMetadata.hash, db.SqlCommitMetadata.author,
                                                      db.SqlCommitMetadata.number_affected_files,
