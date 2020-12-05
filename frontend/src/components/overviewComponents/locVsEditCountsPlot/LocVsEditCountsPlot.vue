@@ -1,7 +1,18 @@
 <template>
   <v-card elevation="2" class="pt-3">
     <v-col align="center">
-      <div class="text-h5 pb-2">Lines of Code and Edit Count</div>
+      <div class="text-h5 pb-2">Lines of Code vs Edit Count</div>
+      <v-autocomplete
+          v-model="selected_file_types"
+          :items="available_file_types"
+          label="Filter file types"
+          chips
+          multiple
+          clearable
+          deletable-chips
+          small-chips
+          class="max-width-input"
+      ></v-autocomplete>
       <v-skeleton-loader
           v-show="$store.state.overview.loc_vs_edict_counts_is_loading"
           type="image"
@@ -18,12 +29,8 @@
 </template>
 
 <style scoped>
-.switch-small {
-  max-width: 15rem;
-  transform: scale(0.9);
-  margin: 0;
-  padding: 0;
-  margin-top: 0.5rem;
+.max-width-input {
+  max-width: 30rem;
 }
 </style>
 
@@ -37,10 +44,14 @@ export default {
   },
   data() {
     return {
+      selected_file_types: [],
       plot_layout: {
         hovermode: 'closest',
+        xaxis: {
+          title: 'Lines in File',
+        },
         yaxis: {
-          automargin: true,
+          title: 'Number of Edits',
         },
         margin: {
           t: 10,
@@ -54,6 +65,12 @@ export default {
       let loc_edit_counts_data = this.$store.getters.get_loc_vs_edit_counts_dataframe;
       if (!loc_edit_counts_data)
         return [];
+
+      const selected_file_types = this.selected_file_types;
+      if (selected_file_types.length > 0) {
+        loc_edit_counts_data = loc_edit_counts_data.filter(row => (
+            selected_file_types.some(type => row.get('current_path').endsWith(type))));
+      }
 
       loc_edit_counts_data = loc_edit_counts_data.withColumn('text', row => (
           `${row.get('current_path')}<br>`
@@ -70,6 +87,31 @@ export default {
         type: "scatter",
       }];
     },
+    available_file_types() {
+      let loc_edit_counts_data = this.$store.getters.get_loc_vs_edit_counts_dataframe;
+      if (!loc_edit_counts_data)
+        return [];
+
+      let file_extension_counts = {};
+      for (let file_path of loc_edit_counts_data.toArray('current_path')) {
+        let file_path_items = file_path.split('/');
+        let file_name = file_path_items[file_path_items.length - 1];
+
+        let file_name_items = file_name.split('.')
+        let file_extension = file_name_items[file_name_items.length - 1];
+        if (file_name_items.length > 1)  // we want .py for something like a.py, but not .Dockerfile for Dockerfile
+          file_extension = '.' + file_extension;
+        if (!(file_extension in file_extension_counts))
+          file_extension_counts[file_extension] = 0;
+        file_extension_counts[file_extension] += 1;
+      }
+
+      let file_types_by_popularity = Object.keys(file_extension_counts).sort(
+          (a, b) => {
+            return file_extension_counts[b] - file_extension_counts[a]
+          });
+      return file_types_by_popularity;
+    }
   }
 }
 
