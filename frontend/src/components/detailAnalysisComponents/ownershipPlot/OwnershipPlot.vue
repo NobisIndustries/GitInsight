@@ -1,8 +1,14 @@
 <template>
   <v-card elevation="2" class="pa-3">
     <div class="text-h5">Ownership</div>
+    <v-skeleton-loader
+        v-show="$store.state.entry_details.history_is_loading"
+        type="image"
+        class="ma-5"
+    ></v-skeleton-loader>
     <div class="plot-max-width">
       <Plotly
+          v-show="!$store.state.entry_details.history_is_loading"
           :data="plot_data"
           :layout="plot_layout"
           :display-mode-bar="false"

@@ -1,7 +1,7 @@
 <template>
   <v-card elevation="2" class="pt-3">
     <v-col align="center">
-      <div class="text-h5 pb-2">Repo overview</div>
+      <div class="text-h5 pb-2">Repo Overview</div>
       <PlotBySelector
           :options="plot_by_options"
           @change="selected_plot_type = $event"
@@ -13,7 +13,13 @@
           class="switch-small"
           dense
       ></v-switch>
+      <v-skeleton-loader
+          v-show="$store.state.overview.count_and_team_is_loading"
+          type="image"
+          class="ma-5"
+      ></v-skeleton-loader>
       <Plotly
+          v-show="!$store.state.overview.count_and_team_is_loading & $store.state.overview.count_and_team_of_dirs_data !== null"
           :data="plot_data"
           :layout="plot_layout"
           :display-mode-bar="false"

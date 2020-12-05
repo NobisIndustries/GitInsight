@@ -6,7 +6,13 @@
           :options="plot_by_options"
           @change="selected_plot_type = $event"
       ></PlotBySelector>
+      <v-skeleton-loader
+          v-show="$store.state.entry_details.history_is_loading"
+          type="image"
+          class="ma-5"
+      ></v-skeleton-loader>
       <Plotly
+          v-show="!$store.state.entry_details.history_is_loading"
           :data="plot_data"
           :layout="plot_layout"
           :display-mode-bar="false"
