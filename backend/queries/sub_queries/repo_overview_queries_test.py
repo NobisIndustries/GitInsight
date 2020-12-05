@@ -29,7 +29,7 @@ class RepoOverviewQueriesTest(unittest.TestCase):
             'authored_timestamp': [10, 20, 30, 40],
             'number_affected_files': [4, 3, 2, 1]
         })
-        queries._query_data = Mock(return_value=query_data)
+        queries._query_count_and_teams_data = Mock(return_value=query_data)
         return queries
 
     def test_calculate_count_and_best_team_of_dir(self):

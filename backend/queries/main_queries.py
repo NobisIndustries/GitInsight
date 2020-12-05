@@ -64,6 +64,12 @@ class BranchInfoProvider:
         self._repo = git_repo
 
     def filter_for_commits_in_branch(self, data: pd.DataFrame, branch: str):
+        """ Discards commits that do not belong to the given branch. We could do this in SQL, however:
+          - Option 1: Save all branches and their commits into the data base -> with multiple branches the data base
+                      quickly gets big fast + writing 100k+ entries for each branch takes a long time
+          - Option 2: Provide commit hashes in SQL query -> this is super slow when filtering for 100k+ hashes
+        Therefore its much more performant to do commit filtering locally"""
+
         hashes_in_branch = self._get_hashes_in_branch(branch)
         return data.loc[data.hash.isin(hashes_in_branch)]
 
@@ -89,4 +95,5 @@ if __name__ == '__main__':
     #print(q.general_info.get_all_branches())
     #print(q.general_info.get_all_paths_in_branch('master'))
     print(q.file_operations.get_history_of_path('Python/', 'master'))
-    print(q.overview.calculate_count_and_best_team_of_dir('master'))
+    #print(q.overview.calculate_count_and_best_team_of_dir('master'))
+    print(q.overview.calculate_loc_vs_edit_counts('master'))

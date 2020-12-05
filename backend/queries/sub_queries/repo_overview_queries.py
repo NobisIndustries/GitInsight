@@ -7,7 +7,6 @@ import pandas as pd
 import db_schema as db
 from constants import PATH_SPLIT_CHAR
 
-
 NO_BEST_TEAM = 'Inconclusive'
 NO_BEST_TEAM_COLOR = '#eeeeee'
 
@@ -20,8 +19,45 @@ class RepoOverviewQueries:
         self._branch_info_provider = branch_info_provider
         self._author_info_provider = author_info_provider
 
+    def calculate_loc_vs_edit_counts(self, branch: str, last_days=None):
+        data = self._query_loc_vs_edit_count_data(branch, last_days)
+
+        data = data.dropna()  # Binary files don't have a line count
+        data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
+
+        relevant_columns = [db.SqlCurrentFileInfo.current_path.name, db.SqlCurrentFileInfo.line_count.name]
+        data = data.loc[:, relevant_columns]
+        data[db.SqlCurrentFileInfo.line_count.name] = data[db.SqlCurrentFileInfo.line_count.name].astype(int)
+        data['edit_count'] = 1
+        counts = data.groupby(relevant_columns).count()
+        counts.reset_index(inplace=True)
+
+        return counts
+
+    def _query_loc_vs_edit_count_data(self, branch, last_days):
+        min_ts = self.__get_min_timestamp(last_days)
+        relevant_commits_query = self._session.query(db.SqlCommitMetadata.hash) \
+            .filter(db.SqlCommitMetadata.authored_timestamp >= min_ts).subquery()
+        relevant_files_query = self._session.query(
+            db.SqlCurrentFileInfo.current_path,
+            db.SqlCurrentFileInfo.file_id,
+            db.SqlCurrentFileInfo.line_count) \
+            .filter(db.SqlCurrentFileInfo.branch == branch).subquery()
+        query = self._session.query(
+            db.SqlAffectedFile.file_id,
+            relevant_commits_query.c.hash,
+            relevant_files_query.c.current_path,
+            relevant_files_query.c.line_count) \
+            .join(relevant_commits_query) \
+            .join(relevant_files_query).statement
+        data = pd.read_sql(query, self._session.bind)
+        return data
+
+    def __get_min_timestamp(self, last_days):
+        return time.time() - (24 * 3600 * last_days) if last_days else 0
+
     def calculate_count_and_best_team_of_dir(self, branch: str, max_depth=3, last_days=None):
-        data = self._query_data(branch, last_days)
+        data = self._query_count_and_teams_data(branch, last_days)
 
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
 
@@ -33,32 +69,34 @@ class RepoOverviewQueries:
                                 (data.authored_timestamp - min_ts) / (max_ts - min_ts))
         data['weighted'] = weight_by_number_files * weight_by_commit_age
 
-        results = self.__calculate_metrics(data, max_depth)
+        results = self.__calculate_count_and_teams_metrics(data, max_depth)
         results = self.__insert_team_color(results)
 
         return results
 
-    def _query_data(self, branch, last_days):
-        min_ts = time.time() - (24 * 3600 * last_days) if last_days else 0
-        relevant_commits_query = self._session.query(db.SqlCommitMetadata.hash, db.SqlCommitMetadata.author,
-                                                     db.SqlCommitMetadata.number_affected_files,
-                                                     db.SqlCommitMetadata.authored_timestamp) \
+    def _query_count_and_teams_data(self, branch, last_days):
+        min_ts = self.__get_min_timestamp(last_days)
+        relevant_commits_query = self._session.query(
+                db.SqlCommitMetadata.hash,
+                db.SqlCommitMetadata.author,
+                db.SqlCommitMetadata.number_affected_files,
+                db.SqlCommitMetadata.authored_timestamp) \
             .filter(db.SqlCommitMetadata.authored_timestamp >= min_ts).subquery()
         relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path) \
             .filter(db.SqlCurrentFileInfo.branch == branch).subquery()
         query = self._session.query(
-            db.SqlAffectedFile.file_id,
-            relevant_commits_query.c.author,
-            relevant_commits_query.c.hash,
-            relevant_commits_query.c.number_affected_files,
-            relevant_commits_query.c.authored_timestamp,
-            relevant_files_query.c.current_path) \
+                db.SqlAffectedFile.file_id,
+                relevant_commits_query.c.author,
+                relevant_commits_query.c.hash,
+                relevant_commits_query.c.number_affected_files,
+                relevant_commits_query.c.authored_timestamp,
+                relevant_files_query.c.current_path) \
             .join(relevant_commits_query) \
             .join(relevant_files_query).statement
         data = pd.read_sql(query, self._session.bind)
         return data
 
-    def __calculate_metrics(self, data, max_depth):
+    def __calculate_count_and_teams_metrics(self, data, max_depth):
         root_element = self.__build_tree(data, max_depth)
         counts = {}
         root_element.calculate_edit_count(counts)
