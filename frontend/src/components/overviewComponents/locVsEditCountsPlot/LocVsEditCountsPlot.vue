@@ -1,5 +1,14 @@
 <template>
-  <v-card elevation="2" class="pt-3">
+  <CardWithHelp
+      help_text="<p>This chart correlates the line count of a file with its edit count. Outliers with high line count,
+                 high edit count or both will be well visible here.</p>
+                 <p>Big source code files can be bad (and more often than not smell like god objects). Big
+                 files that are edited often are definitely not good and indicate problems with the application
+                 architecture.</p>
+                 <p>Oftentimes bigger modules/files/classes tend to be core parts of the application. In a healthy
+                 architecture, these core modules should be relatively stable (i.e. changed less often) while change
+                 frequency can increase in outer layers where the bulk of new feature development happens.</p>"
+  >
     <v-col align="center">
       <div class="text-h5 pb-2">Lines of Code vs Edit Count</div>
       <v-autocomplete
@@ -25,7 +34,7 @@
           :display-mode-bar="false"
       ></Plotly>
     </v-col>
-  </v-card>
+  </CardWithHelp>
 </template>
 
 <style scoped>
@@ -36,10 +45,12 @@
 
 <script>
 import {Plotly} from 'vue-plotly';
+import CardWithHelp from "@/components/commonComponents/CardWithHelp";
 
 export default {
   name: 'LocVsEditCountsPlot',
   components: {
+    CardWithHelp,
     Plotly
   },
   data() {

@@ -1,5 +1,16 @@
 <template>
-  <v-card elevation="2" class="pt-3">
+  <CardWithHelp
+    help_text="<p>Your repository as a tree map. It includes two modes:<ul>
+               <li><b>Code Ownership</b>: Similar to the operations in the Detail Analysis section, this chart tells you
+               which team has the most impact on the contents of a given directory based on the commits of its members.
+               If multiple teams have made similar contributions, it will be tagged as 'Inconclusive'.</li>
+               <li><b>Edit Frequency</b>: Which parts of the repository are most active? Here you can also switch
+               the color dimension between absolute edit counts per directory and the relative amount of edits
+               compared to all the edits made in its parent directory..</li></ul></p>
+               <p>Only directories are shown, but the metrics are of course based on all included files.
+               Too zoom in on a specific directory, simply click it. With the arrow on the top of this chart you can
+               zoom out again.</p>"
+  >
     <v-col align="center">
       <div class="text-h5 pb-2">Repo Overview</div>
       <PlotBySelector
@@ -25,7 +36,7 @@
           :display-mode-bar="false"
       ></Plotly>
     </v-col>
-  </v-card>
+  </CardWithHelp>
 </template>
 
 <style scoped>
@@ -41,10 +52,12 @@
 <script>
 import {Plotly} from 'vue-plotly';
 import PlotBySelector from "@/components/commonComponents/PlotBySelector";
+import CardWithHelp from "@/components/commonComponents/CardWithHelp";
 
 export default {
   name: 'OverviewTreeMap',
   components: {
+    CardWithHelp,
     PlotBySelector,
     Plotly
   },
@@ -111,10 +124,9 @@ function get_plot_data_counts(treemap_data, branch, color_relative) {
     return row.get('edit_count') / dir_edit_count[row.get('parent_element')];
   });
 
-  treemap_data = treemap_data.withColumn('text', row => {
-    return (`${(row.get('relative_edit_count') * 100).toFixed(1)}% of edits in parent dir<br>`
-        + `Total edit count: ${row.get('edit_count')}`);
-  });
+  treemap_data = treemap_data.withColumn('text', row => (
+        `${(row.get('relative_edit_count') * 100).toFixed(1)}% of edits in parent dir<br>`
+        + `Total edit count: ${row.get('edit_count')}`));
 
   const value_column = color_relative ? 'relative_edit_count' : 'edit_count';
   const colorbar_title = color_relative ? 'Fraction of all<br>edits in parent dir' : 'Total edits'
@@ -146,6 +158,7 @@ function get_plot_data_teams(treemap_data) {
     maxdepth: 3,
     labels: treemap_data.toArray('dir_path'),
     parents: treemap_data.toArray('parent_element'),
+    hoverinfo: 'text',
     text: treemap_data.toArray('text'),
     marker: {
       colors: treemap_data.toArray('team_display_color'),

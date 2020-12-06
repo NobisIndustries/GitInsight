@@ -1,5 +1,15 @@
 <template>
-  <v-card elevation="2" class="pt-3">
+  <CardWithHelp
+    help_text="<p>A timeline of every edit made to the given file, to determine the people who have the most
+               influence/knowledge about it.</p>
+               <p>Each marker represents one edit and is colored by the team the author belongs to. The size of the
+               markers directly correlates to the number of files affected in the commit. A larger number of modified
+               files most likely means that the commit is less relevant to an individual file (e.g. globally changed
+               line endings, moved modules), so the marker is shown smaller.</p>
+               <p>If a directory is chosen, the edits of all files in this directory and its subdirectories are shown.
+               In this case, you can also cluster by individual files instead of authors. A third mode shows the move
+               and rename history of the tracked files.</p>"
+  >
     <v-col align="center">
       <div class="text-h5 pb-2">File Operations</div>
       <PlotBySelector
@@ -19,16 +29,18 @@
           @click="select_commit($event)"
       ></Plotly>
     </v-col>
-  </v-card>
+  </CardWithHelp>
 </template>
 
 <script>
 import {Plotly} from 'vue-plotly';
 import PlotBySelector from "@/components/commonComponents/PlotBySelector";
+import CardWithHelp from "@/components/commonComponents/CardWithHelp";
 
 export default {
   name: 'CommitPlot',
   components: {
+    CardWithHelp,
     PlotBySelector,
     Plotly
   },
