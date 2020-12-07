@@ -14,6 +14,8 @@
       <v-autocomplete
           v-model="selected_file_types"
           :items="available_file_types"
+          item-text="file_type"
+          item-value="file_type"
           label="Filter file types"
           chips
           multiple
@@ -21,7 +23,14 @@
           deletable-chips
           small-chips
           class="max-width-input"
-      ></v-autocomplete>
+      >
+        <template v-slot:item="{ item }">
+          <v-list-item-content>
+            <v-list-item-title v-text="item.file_type"></v-list-item-title>
+            <v-list-item-subtitle >{{ item.file_count }} {{item.file_count > 1 ? 'files':'file'}}</v-list-item-subtitle>
+          </v-list-item-content>
+        </template>
+      </v-autocomplete>
       <v-skeleton-loader
           v-show="$store.state.overview.loc_vs_edict_counts_is_loading"
           type="image"
@@ -117,11 +126,12 @@ export default {
         file_extension_counts[file_extension] += 1;
       }
 
-      let file_types_by_popularity = Object.keys(file_extension_counts).sort(
-          (a, b) => {
-            return file_extension_counts[b] - file_extension_counts[a]
-          });
-      return file_types_by_popularity;
+      let file_types_by_number = [];
+      for(let file_type in file_extension_counts)
+        file_types_by_number.push({file_type: file_type, file_count: file_extension_counts[file_type]});
+
+      file_types_by_number.sort((a, b) => b.file_count - a.file_count);
+      return file_types_by_number;
     }
   }
 }
