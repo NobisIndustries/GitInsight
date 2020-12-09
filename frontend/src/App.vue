@@ -14,6 +14,23 @@
           </v-list-item-action>
           <v-list-item-content>{{ item.title }}</v-list-item-content>
         </v-list-item>
+        <v-list-group
+            v-for="item in menuItemsWithSubItems"
+            :key="item.title">
+          <template v-slot:activator>
+          <v-list-item-action>
+            <v-icon>{{ item.icon }}</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>{{ item.title }}</v-list-item-content>
+          </template>
+          <v-list-item
+              v-for="subItem in item.children"
+              :key="subItem.title"
+              :to="subItem.path"
+          >
+            <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list-group>
       </v-list>
     </v-navigation-drawer>
 
@@ -36,6 +53,35 @@
           <v-icon left dark>{{ item.icon }}</v-icon>
           {{ item.title }}
         </v-btn>
+        <v-menu
+            bottom
+            left
+            open-on-hover
+            offset-y
+            v-for="item in menuItemsWithSubItems"
+            :key="item.title"
+
+        >
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+                v-bind="attrs"
+                v-on="on"
+            >
+              <v-icon left dark>{{ item.icon }}</v-icon>
+              {{ item.title }}
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item
+                v-for="subItem in item.children"
+                :key="subItem.title"
+                :to="subItem.path"
+            >
+              <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-toolbar-items>
     </v-app-bar>
 
@@ -56,7 +102,15 @@ export default {
       menuItems: [
         {title: 'Detail Analysis', path: '/details', icon: 'mdi-chart-scatter-plot'},
         {title: 'Repo Overview', path: '/overview', icon: 'mdi-chart-tree'},
-        {title: 'Configuration', path: '/configuration', icon: 'mdi-cog'}
+      ],
+      menuItemsWithSubItems: [
+        {
+          title: 'Configuration', icon: 'mdi-cog', children: [
+            {title: 'Database Update', path: '/config/db_update'},
+            {title: 'Authors and Teams', path: '/config/authors_and_teams'},
+            {title: 'Security', path: '/config/security'},
+          ]
+        },
       ]
     }
   },

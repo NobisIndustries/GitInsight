@@ -5,7 +5,9 @@ const router_options = [
   { path: '/', component: 'Landing' },
   { path: '/details', component: 'DetailAnalysis' },
   { path: '/overview', component: 'OverviewAnalysis' },
-  { path: '/configuration', component: 'Configuration', meta: { requiresAuth: true } },
+  { path: '/config/db_update', component: 'config/DatabaseUpdate', meta: { requiresAuth: true } },
+  { path: '/config/authors_and_teams', component: 'config/AuthorsAndTeams', meta: { requiresAuth: true } },
+  { path: '/config/security', component: 'config/Security', meta: { requiresAuth: true } },
   { path: '*', component: 'NotFound' }
 ];
 

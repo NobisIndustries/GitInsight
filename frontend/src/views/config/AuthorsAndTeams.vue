@@ -1,11 +1,11 @@
 <template>
   <v-container fluid>
-    Some configuration
+    Some authors and teams config
   </v-container>
 </template>
 
 <script>
 export default {
-  name: "Configuration"
+  name: "AuthorsAndTeamsConfig"
 }
 </script>
