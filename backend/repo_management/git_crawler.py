@@ -2,7 +2,7 @@ import pprint
 import re
 from collections import defaultdict, namedtuple
 from copy import copy
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Dict, List
 from uuid import uuid4
 
@@ -12,156 +12,12 @@ from sqlalchemy.exc import OperationalError
 
 import db_schema as db
 from helpers.path_helpers import get_repo_path
-
-
-class Commit:
-    @classmethod
-    def from_git_commit(cls, git_commit: git.Commit):
-        return Commit(
-            git_commit.hexsha,
-            CommitMetadata.from_git_commit(git_commit),
-            CommitAffectedFiles.from_git_commit(git_commit),
-            False
-        )
-
-    @classmethod
-    def from_db(cls, db_metadata, db_affected_files):
-        return Commit(
-            db_metadata.hash,
-            CommitMetadata.from_db(db_metadata),
-            CommitAffectedFiles.from_db(db_affected_files),
-            True
-        )
-
-    def __init__(self, hash: str, metadata, affected_files, already_in_db: bool):
-        self.hash = hash
-        self.metadata = metadata
-        self.affected_files = affected_files
-
-        self._already_in_db = already_in_db
-
-    def add_to_db(self, db_session):
-        if self._already_in_db:
-            return
-        sql_metadata = self.metadata.to_db_representation(self.hash, self.affected_files.get_number_affected_files())
-        db_session.add(sql_metadata)
-
-        for sql_affected_file in self.affected_files.to_db_representation(self.hash):
-            db_session.add(sql_affected_file)
-
-    def __repr__(self):
-        return '\n    '.join(['', f'hash: {self.hash}', f'metadata: {self.metadata}',
-                              f'affected_files: {self.affected_files}'])
-
-
-class CommitMetadata:
-    @classmethod
-    def from_git_commit(cls, git_commit: git.Commit):
-        return CommitMetadata(
-            git_commit.authored_date,
-            git_commit.author.name,
-            git_commit.message
-        )
-
-    @classmethod
-    def from_db(cls, db_metadata: db.SqlCommitMetadata):
-        return CommitMetadata(
-            db_metadata.authored_timestamp,
-            db_metadata.author,
-            db_metadata.message
-        )
-
-    def __init__(self, authored_timestamp: int, author: str, message: str):
-        self._authored_timestamp = authored_timestamp
-        self._author = author
-        self._message = message
-
-    def to_db_representation(self, hash, number_affected_files):
-        return db.SqlCommitMetadata(
-            hash=hash,
-            authored_timestamp=self._authored_timestamp,
-            author=self._author,
-            message=self._message,
-            number_affected_files=number_affected_files
-        )
-
-    def __repr__(self):
-        return ', '.join([f'authored_timestamp: {self._authored_timestamp}', f'author: {self._author}',
-                          f'message: {self._message.strip()}'])
-
-
-class CommitAffectedFiles:
-    @classmethod
-    def from_git_commit(cls, git_commit: git.Commit):
-        diffs = git_commit.parents[0].diff(git_commit.hexsha) if git_commit.parents else git_commit.diff(git.NULL_TREE)
-        affected_files = [CommitAffectedFile.from_file_diff(diff) for diff in diffs]
-        return CommitAffectedFiles(affected_files)
-
-    @classmethod
-    def from_db(cls, db_affected_files: List[db.SqlAffectedFile]):
-        affected_files = [CommitAffectedFile.from_db(db_af) for db_af in db_affected_files]
-        return CommitAffectedFiles(affected_files)
-
-    def __init__(self, affected_files):
-        self._affected_files = affected_files
-
-    def get_number_affected_files(self):
-        return len(self._affected_files)
-
-    def to_db_representation(self, hash):
-        return [af.to_db_representation(hash) for af in self._affected_files]
-
-    def __iter__(self):
-        for affected_file in self._affected_files:
-            yield affected_file
-
-    def __repr__(self):
-        return pprint.pformat(self._affected_files)
-
-
-class CommitAffectedFile:
-    @classmethod
-    def from_file_diff(cls, file_diff):
-        return CommitAffectedFile(
-            cls._to_unix_path(file_diff.a_path),
-            cls._to_unix_path(file_diff.b_path),
-            file_diff.change_type
-        )
-
-    @classmethod
-    def from_db(cls, db_affected_file: db.SqlAffectedFile):
-        return CommitAffectedFile(
-            db_affected_file.old_path,
-            db_affected_file.new_path,
-            db_affected_file.change_type,
-            db_affected_file.file_id
-        )
-
-    @classmethod
-    def _to_unix_path(cls, path):
-        return PurePath(path).as_posix()
-
-    def __init__(self, old_path, new_path, change_type, file_id=None):
-        self.old_path = old_path
-        self.new_path = new_path
-        self.change_type = change_type
-        self.file_id = file_id
-
-    def to_db_representation(self, hash):
-        return db.SqlAffectedFile(
-            hash=hash,
-            file_id=self.file_id,
-            old_path=self.old_path,
-            new_path=self.new_path,
-            change_type=self.change_type
-        )
-
-    def __repr__(self):
-        return ', '.join([f'old_path: {self.old_path}', f'new_path: {self.new_path}',
-                          f'change_type: {self.change_type}', f'file_id: {self.file_id}'])
+from repo_management.git_crawl_items import Commit
 
 
 class CurrentFilesInfoCollector:
+    """Calculates and tracks the line count of all files in the given branches."""
+
     MAGIC_EMPTY_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'  # See https://stackoverflow.com/a/40884093
     EXTRACT_NUMBER_AT_START_REGEX = re.compile(r'^(\d+)')
     EntryInfo = namedtuple('EntryInfo', ['id', 'path', 'line_count'])
@@ -214,29 +70,9 @@ class CurrentFilesInfoCollector:
         return pprint.pformat(self._file_infos_of_branch)
 
 
-class CrawlResult:
-    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
-        self.child_commit_tree = child_commit_tree
-        self.current_info_of_branches = current_paths_of_branches
-
-    def write_to_db(self):
-        db_engine = db.get_engine()
-
-        db.create_tables()
-        db.SqlCurrentFileInfo.__table__.drop(db_engine)
-        db.create_tables()
-
-        db_session = db.get_session()
-        for commits in self.child_commit_tree.values():
-            for commit in commits:
-                commit.add_to_db(db_session)
-
-        self.current_info_of_branches.add_to_db(db_session)
-
-        db_session.commit()
-
-
 class CommitProvider:
+    """ Caches existing commit info objects from the database. If a requested commit info is not found,
+     it creates a new one from the given data."""
     def __init__(self):
         db_session = db.get_session()
         try:
@@ -263,6 +99,7 @@ class CommitProvider:
 
 class CommitCrawlerState:
     IDLE = 'IDLE'
+    UPDATE_REPO = 'UPDATE_REPO'
     GET_PREVIOUS_COMMITS = 'GET_PREVIOUS_COMMITS'
     EXTRACT_COMMITS = 'EXTRACT_COMMITS'
     CALCULATE_PATHS = 'CALCULATE_PATHS'
@@ -281,18 +118,28 @@ class CommitCrawler:
         self._commits_processed = 0
         self._commits_total = 0
         self._current_operation = CommitCrawlerState.IDLE
+        self._error_message = ''
 
     def get_status(self):
         return {
             'commits_processed': self._commits_processed,
             'commits_total': self._commits_total,
-            'current_operation': self._current_operation
+            'current_operation': self._current_operation,
+            'error_message': self._error_message,
         }
 
     def is_busy(self):
         return self._current_operation != CommitCrawlerState.IDLE
 
     def crawl(self):
+        self._error_message = ''
+        try:
+            self.__crawl()
+        except Exception as e:
+            self._error_message = str(e)
+            self._current_operation = CommitCrawlerState.IDLE
+
+    def __crawl(self):
         self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
         self._commit_provider = CommitProvider()
 
@@ -311,7 +158,12 @@ class CommitCrawler:
 
     def __get_latest_commits_of_branches(self):
         return {self._repo.git.execute(f'git rev-parse "{branch}"').strip(): str(branch) for branch in
-                self._repo.branches}
+                self.__get_repo_branches()}
+
+    def __get_repo_branches(self):
+        branches_raw = self._repo.git.execute('git branch -r')
+        branches = [branch.strip() for branch in branches_raw.splitlines() if ' -> ' not in branch]
+        return branches
 
     def __extract_child_tree(self, all_hashes):
         self._commits_total = len(all_hashes)
@@ -377,6 +229,28 @@ class CommitCrawler:
             branch_name = self._latest_hashes[child_commit_hash]
             files_info_collector.add_branch_info(branch_name, child_commit_hash, dict(branch_file_paths))
         return child_commit_hash
+
+
+class CrawlResult:
+    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
+        self.child_commit_tree = child_commit_tree
+        self.current_info_of_branches = current_paths_of_branches
+
+    def write_to_db(self):
+        db_engine = db.get_engine()
+
+        db.create_tables()
+        db.SqlCurrentFileInfo.__table__.drop(db_engine)
+        db.create_tables()
+
+        db_session = db.get_session()
+        for commits in self.child_commit_tree.values():
+            for commit in commits:
+                commit.add_to_db(db_session)
+
+        self.current_info_of_branches.add_to_db(db_session)
+
+        db_session.commit()
 
 
 if __name__ == '__main__':

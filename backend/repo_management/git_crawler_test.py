@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from git_crawler import CurrentFilesInfoCollector
+from repo_management.git_crawler import CurrentFilesInfoCollector
 
 
 class CurrentFilesInfoCollectorTest(unittest.TestCase):
