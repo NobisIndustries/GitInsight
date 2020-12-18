@@ -1,11 +1,11 @@
 import json
-import secrets
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 from pydantic.main import BaseModel
 
 from helpers.path_helpers import DATA_DIR
+from helpers.security_helpers import get_random_token
 
 
 class JsonBaseConfig(BaseModel):
@@ -71,8 +71,8 @@ class CrawlConfig(JsonBaseConfig):
     def _get_config_path(cls):
         return 'crawl.json'
 
-    pull_before_update: bool = False
-    tracked_branches: List[str] = []
-    update_interval_minutes: int = 60 * 24
-    update_base_time: str = '04:00'
-    webhook_token: str = secrets.token_urlsafe(32)
+    update_before_crawl: bool = True
+    limit_tracked_branches_days_last_activity: int = 90
+    crawl_interval_minutes: int = 60 * 24
+    crawl_base_time: str = '04:00'
+    webhook_token: str = get_random_token()

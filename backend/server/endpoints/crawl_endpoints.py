@@ -2,9 +2,10 @@ import threading
 
 from fastapi import APIRouter, HTTPException
 
-from git_crawler import CommitCrawler
 from configs import CrawlConfig
 from helpers.path_helpers import get_repo_path
+from helpers.security_helpers import get_random_token
+from repo_management.git_crawler import CommitCrawler
 
 router = APIRouter()
 
@@ -32,3 +33,8 @@ async def write_config(crawl_config: CrawlConfig):
 @router.get('/config')
 async def get_config() -> CrawlConfig:
     return CrawlConfig.load()
+
+
+@router.get('/random_token')
+async def get_random_webhook_token() -> str:
+    return get_random_token()
