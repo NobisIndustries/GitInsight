@@ -1,41 +1,30 @@
 import functools
-import json
-from pathlib import Path
 from random import choice
-from typing import List, Iterable
+from typing import List, Iterable, Dict
 
 import git
 import pandas as pd
 
 import db_schema as db
-from helpers.path_helpers import get_repo_path, get_authors_path, get_teams_path
+from configs import AuthorsConfig, TeamsConfig
+from helpers.path_helpers import get_repo_path
 from queries.sub_queries.file_operation_queries import FileOperationQueries
 from queries.sub_queries.general_info_queries import GeneralInfoQueries
 from queries.sub_queries.repo_overview_queries import RepoOverviewQueries
 
 
 class AuthorInfoProvider:
-    UNKNOWN_TEAM_ID = 'UNKNOWN'
-    UNKNOWN_TEAM_INFO = {
-        'team_display_name': 'Unknown team',
-        'team_display_color': '#cccccc',
-        'team_description': 'This is a fallback team for everyone that has not been assigned to a team yet.',
-        'team_contact_link': ''
-    }
     UNKNOWN_PERSON_INFO = {
-        'team_id': UNKNOWN_TEAM_ID,
+        'team_id': 'UNKNOWN',
         'person_image_url': '',
         'person_description': 'There is no information for this person',
         'person_contact_link': ''
     }
     AUTHOR_COLUMN_NAME = db.SqlCommitMetadata.author.name
 
-    def __init__(self, authors_path: Path, teams_path: Path):
-        with authors_path.open(encoding='utf-8') as f:
-            self._authors = json.load(f)
-        with teams_path.open(encoding='utf-8') as f:
-            self._teams = json.load(f)
-            self._teams[self.UNKNOWN_TEAM_ID] = self.UNKNOWN_TEAM_INFO
+    def __init__(self, authors: Dict[str, Dict[str, str]], teams: Dict[str, Dict[str, str]]):
+        self._authors = authors
+        self._teams = teams
 
     def add_info_to_author_names(self, names: Iterable[str]) -> pd.DataFrame:
         additional_data = []
@@ -81,7 +70,7 @@ class BranchInfoProvider:
 class Queries:
     def __init__(self):
         db_session = db.get_session()
-        author_info_provider = AuthorInfoProvider(get_authors_path(), get_teams_path())
+        author_info_provider = AuthorInfoProvider(AuthorsConfig.load().authors, TeamsConfig.load().teams)
         branch_info_provider = BranchInfoProvider(git.Repo(get_repo_path()))
 
         self.general_info = GeneralInfoQueries(db_session)

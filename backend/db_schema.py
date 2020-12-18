@@ -1,10 +1,10 @@
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.schema import ForeignKey
 
-from helpers.path_helpers import get_sqlite_db_path
+from helpers.path_helpers import SQLITE_DB_PATH
 
 Base = declarative_base()
 
@@ -39,7 +39,7 @@ class SqlCurrentFileInfo(Base):
 
 
 def get_engine():
-    return create_engine(f'sqlite:///{get_sqlite_db_path()}')
+    return create_engine(f'sqlite:///{SQLITE_DB_PATH}')
 
 
 def get_session():
