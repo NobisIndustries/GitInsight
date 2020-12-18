@@ -58,8 +58,9 @@ class RepoOverviewQueries:
 
     def calculate_count_and_best_team_of_dir(self, branch: str, max_depth=3, last_days=None):
         data = self._query_count_and_teams_data(branch, last_days)
-
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
+        if data.empty:
+            return None
 
         data = self.__insert_team_name(data)
         min_ts = data.authored_timestamp.min()
