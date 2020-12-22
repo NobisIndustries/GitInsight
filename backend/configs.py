@@ -4,7 +4,7 @@ from typing import Dict
 
 from pydantic.main import BaseModel
 
-from helpers.path_helpers import DATA_DIR
+from helpers.path_helpers import CONFIG_DIR
 from helpers.security_helpers import get_random_token
 
 
@@ -26,7 +26,7 @@ class JsonBaseConfig(BaseModel):
 
     @classmethod
     def __get_absolute_config_path(cls):
-        return Path(DATA_DIR, cls._get_config_path())
+        return Path(CONFIG_DIR, cls._get_config_path())
 
     @classmethod
     def _get_config_path(cls):

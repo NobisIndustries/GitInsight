@@ -5,9 +5,12 @@ def get_project_root_path():
     return Path(__file__).parents[2]
 
 
-DATA_DIR = Path(get_project_root_path(), 'data')
-SQLITE_DB_PATH = Path(DATA_DIR, 'data.db')
+def __create_dir(dir_path: Path):
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
 
 
-def get_repo_path():
-    return get_project_root_path().parent / 'cpython'
+DATA_DIR = __create_dir(Path(get_project_root_path(), 'data'))
+CONFIG_DIR = __create_dir(Path(DATA_DIR, 'config'))
+REPO_PATH = __create_dir(Path(DATA_DIR, 'repo'))
+SQLITE_DB_PATH = Path(DATA_DIR, 'repo_data.db')

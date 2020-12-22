@@ -7,7 +7,7 @@ import pandas as pd
 
 import db_schema as db
 from configs import AuthorsConfig, TeamsConfig
-from helpers.path_helpers import get_repo_path
+from helpers.path_helpers import REPO_PATH
 from queries.sub_queries.file_operation_queries import FileOperationQueries
 from queries.sub_queries.general_info_queries import GeneralInfoQueries
 from queries.sub_queries.repo_overview_queries import RepoOverviewQueries
@@ -49,8 +49,8 @@ class AuthorInfoProvider:
 
 
 class BranchInfoProvider:
-    def __init__(self, git_repo):
-        self._repo = git_repo
+    def __init__(self):
+        pass
 
     def filter_for_commits_in_branch(self, data: pd.DataFrame, branch: str):
         """ Discards commits that do not belong to the given branch. We could do this in SQL, however:
@@ -64,14 +64,15 @@ class BranchInfoProvider:
 
     @functools.lru_cache(maxsize=10)
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
-        return self._repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
+        repo = git.Repo(REPO_PATH)
+        return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
 
 
 class Queries:
     def __init__(self):
         db_session = db.get_session()
         author_info_provider = AuthorInfoProvider(AuthorsConfig.load().authors, TeamsConfig.load().teams)
-        branch_info_provider = BranchInfoProvider(git.Repo(get_repo_path()))
+        branch_info_provider = BranchInfoProvider()
 
         self.general_info = GeneralInfoQueries(db_session)
         self.file_operations = FileOperationQueries(db_session, branch_info_provider, author_info_provider)

@@ -2,14 +2,15 @@ import threading
 
 from fastapi import APIRouter, HTTPException
 
-from configs import CrawlConfig
-from helpers.path_helpers import get_repo_path
+from configs import CrawlConfig, RepoConfig
+from helpers.path_helpers import REPO_PATH
 from helpers.security_helpers import get_random_token
 from repo_management.git_crawler import CommitCrawler
 
 router = APIRouter()
 
-crawler = CommitCrawler(get_repo_path())
+repo_url = RepoConfig.load().repo_url
+crawler = CommitCrawler(REPO_PATH, repo_url)
 
 
 @router.get('/status')
@@ -21,7 +22,10 @@ async def get_crawler_status():
 async def update_db():
     if crawler.is_busy():
         raise HTTPException(status_code=409, detail='Already updating')
-    t = threading.Thread(target=crawler.crawl)
+
+    config = CrawlConfig.load()
+    t = threading.Thread(target=crawler.crawl, args=[config.update_before_crawl,
+                                                     config.limit_tracked_branches_days_last_activity])
     t.start()
 
 

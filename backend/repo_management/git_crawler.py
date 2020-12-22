@@ -12,7 +12,7 @@ from bidict import bidict
 from sqlalchemy.exc import OperationalError
 
 import db_schema as db
-from helpers.path_helpers import get_repo_path
+from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawl_items import Commit
 
 
@@ -105,7 +105,8 @@ class CommitProvider:
 
 class CommitCrawlerState:
     IDLE = 'IDLE'
-    UPDATE_REPO = 'c'
+    CLONE_REPO = 'CLONE_REPO'
+    UPDATE_REPO = 'UPDATE_REPO'
     GET_PREVIOUS_COMMITS = 'GET_PREVIOUS_COMMITS'
     EXTRACT_COMMITS = 'EXTRACT_COMMITS'
     CALCULATE_PATHS = 'CALCULATE_PATHS'
@@ -114,8 +115,11 @@ class CommitCrawlerState:
 
 class CommitCrawler:
 
-    def __init__(self, repo_path: Path):
-        self._repo = git.Repo(repo_path)
+    def __init__(self, repo_path: Path, repo_url: str):
+        self._repo_path = Path(repo_path)
+        self._repo_url = repo_url
+
+        self._repo = None
         self._commit_provider = None
 
         self._child_commit_graph = None
@@ -137,15 +141,25 @@ class CommitCrawler:
     def is_busy(self):
         return self._current_operation != CommitCrawlerState.IDLE
 
-    def crawl(self):
+    def crawl(self, update_before_crawl=True, limit_tracked_branches_days_last_activity=None):
         self._error_message = ''
         try:
-            self.__crawl()
+            self.__crawl(update_before_crawl, limit_tracked_branches_days_last_activity)
         except Exception as e:
             self._error_message = str(e)
             self._current_operation = CommitCrawlerState.IDLE
 
-    def __crawl(self):
+    def __crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
+        if not Path(self._repo_path, '.git').exists():
+            self._current_operation = CommitCrawlerState.CLONE_REPO
+            git.Repo.clone_from(self._repo_url, self._repo_path, no_checkout=True)
+
+        self._repo = git.Repo(self._repo_path)
+        if update_before_crawl:
+            self._current_operation = CommitCrawlerState.UPDATE_REPO
+            for remote in self._repo.remotes:
+                remote.fetch()
+
         self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
         self._commit_provider = CommitProvider()
 
@@ -154,7 +168,7 @@ class CommitCrawler:
         self._child_commit_graph = self.__extract_child_tree(all_hashes)
 
         self._current_operation = CommitCrawlerState.CALCULATE_PATHS
-        self._latest_hashes = self.__get_latest_commits_of_branches()
+        self._latest_hashes = self.__get_latest_commits_of_branches(limit_tracked_branches_days_last_activity)
         current_paths_of_branches = self.__follow_files()
 
         self._current_operation = CommitCrawlerState.SAVE_TO_DB
@@ -162,21 +176,26 @@ class CommitCrawler:
 
         self._current_operation = CommitCrawlerState.IDLE
 
-    def __get_latest_commits_of_branches(self):
-        minTimestamp = (time.time() - (self._limit_tracked_branches_days_last_activity * 24 * 3600)
-                        if self._limit_tracked_branches_days_last_activity else 0)
+    def __get_latest_commits_of_branches(self, limit_tracked_branches_days_last_activity):
+        minTimestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
+                        if limit_tracked_branches_days_last_activity else 0)
         commit_hash_of_branch = {}
         for branch in self.__get_repo_branches():
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"').strip()
             commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
             if commit_metadata.authored_timestamp >= minTimestamp:
-                commit_hash_of_branch[commit_hash] = branch
+                commit_hash_of_branch[commit_hash] = self.__clean_origin_branch_name(branch)
         return commit_hash_of_branch
 
     def __get_repo_branches(self):
         branches_raw = self._repo.git.execute('git branch -r')
         branches = [branch.strip() for branch in branches_raw.splitlines() if ' -> ' not in branch]
         return branches
+
+    def __clean_origin_branch_name(self, branch_name):
+        # We use the branches available from the origin remote repo, but want to present them
+        # as "master" instead of "origin/master"
+        return branch_name.split('/')[-1]
 
     def __extract_child_tree(self, all_hashes):
         self._commits_total = len(all_hashes)
@@ -267,6 +286,6 @@ class CrawlResult:
 
 
 if __name__ == '__main__':
-    crawler = CommitCrawler(get_repo_path())
+    crawler = CommitCrawler(REPO_PATH, 'https://github.com/python/cpython.git')
     crawler.crawl()
     print('Finished!')

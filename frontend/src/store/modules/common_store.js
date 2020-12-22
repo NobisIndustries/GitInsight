@@ -22,37 +22,37 @@ export const common_store = {
             state.current_branch = branch;
         },
         calculate_crawl_progress(state, status) {
+            state.is_crawling = true;
             switch (status.current_operation) {
-                case 'UPDATE_REPO':
-                    state.is_crawling = true;
+                case 'CLONE_REPO':
                     state.crawl_percentage = 0;
+                    state.crawl_status_message = 'Clone repo for first usage...';
+                    break;
+                case 'UPDATE_REPO':
+                    state.crawl_percentage = 10;
                     state.crawl_status_message = 'Updating to newest repo version...';
                     break;
                 case 'GET_PREVIOUS_COMMITS':
-                    state.is_crawling = true;
-                    state.crawl_percentage = 10;
+                    state.crawl_percentage = 20;
                     state.crawl_status_message = 'Caching previous data from database...';
                     break;
                 case 'EXTRACT_COMMITS':
-                    state.is_crawling = true;
-                    state.crawl_percentage = 10 + 70 * status.commits_processed / status.commits_total;
-                    state.crawl_status_message = (`Processing commit ${status.commits_processed} `
-                        + `of ${status.commits_total}...`);
+                    state.crawl_percentage = 20 + 60 * status.commits_processed / status.commits_total;
+                    state.crawl_status_message = (`Processing commit ${number_with_seperator(status.commits_processed)} `
+                        + `of ${number_with_seperator(status.commits_total)}...`);
                     break;
                 case 'CALCULATE_PATHS':
-                    state.is_crawling = true;
                     state.crawl_percentage = 80
                     state.crawl_status_message = 'Following file moves and renames...';
                     break;
                 case 'SAVE_TO_DB':
-                    state.is_crawling = true;
                     state.crawl_percentage = 90;
                     state.crawl_status_message = 'Writing changes to database...';
                     break;
                 case 'IDLE':
-                    state.is_crawling = false;
                     state.crawl_percentage = 100;
-                    state.crawl_status_message = 'Idle...';
+                    state.crawl_status_message = 'Idle';
+                    state.is_crawling = false;
                     break;
             }
 
@@ -90,5 +90,9 @@ export const common_store = {
             let request = axios.put(`${API_BASE_PATH}/crawl/config`, config);
             return request;
         }
-    }
+    },
 };
+
+function number_with_seperator(n) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
