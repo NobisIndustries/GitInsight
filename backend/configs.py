@@ -73,8 +73,9 @@ class CrawlConfig(JsonBaseConfig):
 
     update_before_crawl: bool = True
     limit_tracked_branches_days_last_activity: int = 90
-    crawl_interval_minutes: int = 60 * 24
-    crawl_base_time: str = '04:00'
+    crawl_periodically_active: bool = False
+    crawl_periodically_crontab: str = '00 4 * * *'
+    webhook_active: bool = False
     webhook_token: str = get_random_token()
 
 

@@ -30,13 +30,30 @@
 </template>
 
 <style scoped>
-.tooltip-position {
-  right: 1rem;
-  top: 1rem;
-}
-.tooltip-content {
-  max-width: 30rem;
-}
+  .tooltip-position {
+    right: 1rem;
+    top: 1rem;
+  }
+
+  .tooltip-content {
+    max-width: 30rem;
+  }
+</style>
+
+<style>
+  .card-heading {
+    font-size: 1.5rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  .card-subheading {
+    font-size: 1.2rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+  }
 </style>
 
 <script>

@@ -11,7 +11,7 @@
                and rename history of the tracked files.</p>"
   >
     <v-col align="center">
-      <div class="text-h5 pb-2">File Operations</div>
+      <div class="card-heading">File Operations</div>
       <PlotBySelector
           :options="plot_by_options"
           @change="selected_plot_type = $event"

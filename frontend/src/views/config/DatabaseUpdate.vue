@@ -6,56 +6,113 @@
             help_text=""
             class="px-10 pb-5"
         >
-          <v-card-title>Update Status</v-card-title>
-          <div>
-            <v-progress-linear
-                :value="$store.state.common.crawl_percentage"
-                :color="$store.state.common.is_crawling ? 'primary' : 'grey lighten-1'"
-            ></v-progress-linear>
-            <v-card-text>
-              {{ $store.state.common.crawl_status_message }}
-            </v-card-text>
-          </div>
-          <v-alert
-              type="error"
-              outlined
-              v-show="$store.state.common.crawl_error_message !== ''"
-          >
-            An error occured while updating:<br>
-            {{ $store.state.common.crawl_error_message }}
-          </v-alert>
-          <v-switch
-              v-model="crawl_config.update_before_crawl"
-              label="Fetch newest repo version before updating"
-          ></v-switch>
-          <v-text-field
-              v-model="crawl_config.webhook_token"
-              append-icon="mdi-dice-5-outline"
-              label="Webhook Token"
-              type="text"
-              @click:append="get_new_token"
-          ></v-text-field>
-            <DaysSelector
-              label="Only track branches with changes in the last"
-              :init_value="crawl_config.limit_tracked_branches_days_last_activity"
-              @change="crawl_config.limit_tracked_branches_days_last_activity = $event"
-            />
-          <v-btn
-              @click="trigger_update"
-              color="primary"
-              class="mr-5"
-              :disabled="$store.state.common.is_crawling"
-          >Save & Update now
-          </v-btn>
-          <v-btn
-              @click="save_config"
-          >Save
-          </v-btn>
+          <v-col>
+            <div class="card-heading">Update Configuration</div>
+            <div class="card-subheading">Current Status</div>
+            <div class="settings-block">
+              <v-progress-linear
+                  :value="$store.state.common.crawl_percentage"
+                  :color="$store.state.common.is_crawling ? 'primary' : 'grey lighten-1'"
+              ></v-progress-linear>
+              <div
+                  class="message-text"
+                  :class="{'message-text-active': $store.state.common.is_crawling}"
+              >
+                {{ $store.state.common.crawl_status_message }}
+              </div>
+              <v-alert
+                  type="error"
+                  outlined
+                  v-show="$store.state.common.crawl_error_message !== ''"
+              >
+                An error occured while updating:<br>
+                {{ $store.state.common.crawl_error_message }}
+              </v-alert>
+            </div>
+            <div class="card-subheading">Base Settings</div>
+            <div class="settings-block">
+              <v-switch
+                  v-model="crawl_config.update_before_crawl"
+                  label="Fetch newest repo version before updating"
+              ></v-switch>
+              <DaysSelector
+                  label="Only track branches with changes in the last"
+                  :init_value="crawl_config.limit_tracked_branches_days_last_activity"
+                  @change="crawl_config.limit_tracked_branches_days_last_activity = $event"
+              />
+            </div>
+            <div class="card-subheading">Update Trigger Settings</div>
+            <div class="settings-block">
+              <v-row no-gutters>
+                <v-switch
+                    v-model="crawl_config.crawl_periodically_active"
+                    label="Update periodically"
+                    class="inline_switch"
+                ></v-switch>
+                <v-text-field
+                    v-model="crawl_config.crawl_periodically_crontab"
+                    :disabled="!crawl_config.crawl_periodically_active"
+                    label="Update rate (crontab syntax)"
+                    type="text"
+                ></v-text-field>
+              </v-row>
+              <v-row no-gutters>
+                <v-switch
+                    v-model="crawl_config.webhook_active"
+                    label="Update via webhook"
+                    class="inline_switch"
+                ></v-switch>
+                <v-text-field
+                    v-model="crawl_config.webhook_token"
+                    :disabled="!crawl_config.webhook_active"
+                    append-icon="mdi-dice-5-outline"
+                    label="Webhook token"
+                    type="text"
+                    @click:append="get_new_token"
+                ></v-text-field>
+              </v-row>
+            </div>
+            <div align="right">
+              <v-btn
+                  @click="trigger_update"
+                  color="primary"
+                  class="mr-5"
+                  :disabled="$store.state.common.is_crawling"
+              >Save & Update now
+              </v-btn>
+              <v-btn
+                  @click="save_config"
+              >Save
+              </v-btn>
+            </div>
+          </v-col>
         </CardWithHelp>
       </v-col>
     </v-row>
   </v-container>
 </template>
+
+<style scoped>
+.inline_switch {
+  width: 14rem;
+}
+
+.settings-block {
+  margin-left: 2rem;
+  margin-bottom: 2rem;
+}
+
+.message-text {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+.message-text-active {
+  color: var(--v-primary-base);
+  opacity: 1;
+}
+</style>
 
 <script>
 import axios from "axios";

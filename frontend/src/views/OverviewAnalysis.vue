@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <v-col align-self="center">
+    <v-col align="center">
       <v-row justify="center">
         <v-col cols="12" md="3">
           <BranchSelector/>

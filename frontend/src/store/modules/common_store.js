@@ -52,7 +52,7 @@ export const common_store = {
                 case 'IDLE':
                     state.is_crawling = false;
                     state.crawl_percentage = 100;
-                    state.crawl_status_message = 'Nothing to do';
+                    state.crawl_status_message = 'Idle...';
                     break;
             }
 

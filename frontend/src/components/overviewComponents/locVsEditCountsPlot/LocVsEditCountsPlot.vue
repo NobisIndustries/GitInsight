@@ -10,7 +10,7 @@
                  frequency can increase in outer layers where the bulk of new feature development happens.</p>"
   >
     <v-col align="center">
-      <div class="text-h5 pb-2">Lines of Code vs Edit Count</div>
+      <div class="card-heading">Lines of Code vs Edit Count</div>
       <v-autocomplete
           v-model="selected_file_types"
           :items="available_file_types"

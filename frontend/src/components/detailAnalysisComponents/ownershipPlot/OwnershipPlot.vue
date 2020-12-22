@@ -1,25 +1,27 @@
 <template>
   <CardWithHelp
-    help_text="<p>Shows the team ownership of the selected file or directory according to its commit history.</p>
+      help_text="<p>Shows the team ownership of the selected file or directory according to its commit history.</p>
                <p>There are two variants. In the simplest case, the raw edit counts of each team are plotted. A more
                advanced (but more subjective) method weights these edits against each other based on the number of
                affected files of the containing commit (more files are less relevant) as well as the age (older
                commits are less relevant).</p>"
   >
-    <div class="text-h5">Ownership</div>
-    <v-skeleton-loader
-        v-show="$store.state.entry_details.history_is_loading"
-        type="image"
-        class="ma-5"
-    ></v-skeleton-loader>
-    <div class="plot-max-width">
-      <Plotly
-          v-show="!$store.state.entry_details.history_is_loading"
-          :data="plot_data"
-          :layout="plot_layout"
-          :display-mode-bar="false"
-      ></Plotly>
-    </div>
+    <v-col align="center">
+      <div class="card-heading">Ownership</div>
+      <v-skeleton-loader
+          v-show="$store.state.entry_details.history_is_loading"
+          type="image"
+          class="ma-5"
+      ></v-skeleton-loader>
+      <div class="plot-max-width">
+        <Plotly
+            v-show="!$store.state.entry_details.history_is_loading"
+            :data="plot_data"
+            :layout="plot_layout"
+            :display-mode-bar="false"
+        ></Plotly>
+      </div>
+    </v-col>
   </CardWithHelp>
 </template>
 

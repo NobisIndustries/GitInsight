@@ -12,7 +12,7 @@
                zoom out again.</p>"
   >
     <v-col align="center">
-      <div class="text-h5 pb-2">Repo Overview</div>
+      <div class="card-heading">Repo Overview</div>
       <PlotBySelector
           :options="plot_by_options"
           @change="selected_plot_type = $event"
