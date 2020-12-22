@@ -65,22 +65,22 @@ class CommitMetadata:
         )
 
     def __init__(self, authored_timestamp: int, author: str, message: str):
-        self._authored_timestamp = authored_timestamp
-        self._author = author
-        self._message = message
+        self.authored_timestamp = authored_timestamp
+        self.author = author
+        self.message = message
 
     def to_db_representation(self, hash, number_affected_files):
         return db.SqlCommitMetadata(
             hash=hash,
-            authored_timestamp=self._authored_timestamp,
-            author=self._author,
-            message=self._message,
+            authored_timestamp=self.authored_timestamp,
+            author=self.author,
+            message=self.message,
             number_affected_files=number_affected_files
         )
 
     def __repr__(self):
-        return ', '.join([f'authored_timestamp: {self._authored_timestamp}', f'author: {self._author}',
-                          f'message: {self._message.strip()}'])
+        return ', '.join([f'authored_timestamp: {self.authored_timestamp}', f'author: {self.author}',
+                          f'message: {self.message.strip()}'])
 
 
 class CommitAffectedFiles:

@@ -76,3 +76,11 @@ class CrawlConfig(JsonBaseConfig):
     crawl_interval_minutes: int = 60 * 24
     crawl_base_time: str = '04:00'
     webhook_token: str = get_random_token()
+
+
+class RepoConfig(JsonBaseConfig):
+    @classmethod
+    def _get_config_path(cls):
+        return 'repo.json'
+
+    repo_url: str = ''

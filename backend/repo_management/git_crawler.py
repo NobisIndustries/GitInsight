@@ -1,5 +1,6 @@
 import pprint
 import re
+import time
 from collections import defaultdict, namedtuple
 from copy import copy
 from pathlib import Path
@@ -92,14 +93,19 @@ class CommitProvider:
         return {db_md.hash: Commit.from_db(db_md, affected_files_of_commit[db_md.hash]) for db_md in db_metadata}
 
     def get_commit(self, git_commit: git.Commit) -> Commit:
-        if git_commit.hexsha in self._available_commits:
-            return self._available_commits[git_commit.hexsha]
-        return Commit.from_git_commit(git_commit)
+        # This will always return a commit
+        if git_commit.hexsha not in self._available_commits:
+            self._available_commits[git_commit.hexsha] = Commit.from_git_commit(git_commit)
+        return self._available_commits[git_commit.hexsha]
+
+    def get_cached_commit(self, commit_hash) -> Commit:
+        # This will only return a commit if it was already processed here.
+        return self._available_commits.get(commit_hash, None)
 
 
 class CommitCrawlerState:
     IDLE = 'IDLE'
-    UPDATE_REPO = 'UPDATE_REPO'
+    UPDATE_REPO = 'c'
     GET_PREVIOUS_COMMITS = 'GET_PREVIOUS_COMMITS'
     EXTRACT_COMMITS = 'EXTRACT_COMMITS'
     CALCULATE_PATHS = 'CALCULATE_PATHS'
@@ -157,8 +163,15 @@ class CommitCrawler:
         self._current_operation = CommitCrawlerState.IDLE
 
     def __get_latest_commits_of_branches(self):
-        return {self._repo.git.execute(f'git rev-parse "{branch}"').strip(): str(branch) for branch in
-                self.__get_repo_branches()}
+        minTimestamp = (time.time() - (self._limit_tracked_branches_days_last_activity * 24 * 3600)
+                        if self._limit_tracked_branches_days_last_activity else 0)
+        commit_hash_of_branch = {}
+        for branch in self.__get_repo_branches():
+            commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"').strip()
+            commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
+            if commit_metadata.authored_timestamp >= minTimestamp:
+                commit_hash_of_branch[commit_hash] = branch
+        return commit_hash_of_branch
 
     def __get_repo_branches(self):
         branches_raw = self._repo.git.execute('git branch -r')

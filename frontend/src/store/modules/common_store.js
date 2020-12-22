@@ -23,6 +23,11 @@ export const common_store = {
         },
         calculate_crawl_progress(state, status) {
             switch (status.current_operation) {
+                case 'UPDATE_REPO':
+                    state.is_crawling = true;
+                    state.crawl_percentage = 0;
+                    state.crawl_status_message = 'Updating to newest repo version...';
+                    break;
                 case 'GET_PREVIOUS_COMMITS':
                     state.is_crawling = true;
                     state.crawl_percentage = 10;
@@ -47,7 +52,7 @@ export const common_store = {
                 case 'IDLE':
                     state.is_crawling = false;
                     state.crawl_percentage = 100;
-                    state.crawl_status_message = '';
+                    state.crawl_status_message = 'Nothing to do';
                     break;
             }
 
