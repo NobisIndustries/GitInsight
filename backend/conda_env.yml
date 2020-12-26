@@ -10,4 +10,5 @@ dependencies:
     - bidict
     - fastapi
     - uvicorn
+    - crontab
 

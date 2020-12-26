@@ -142,6 +142,9 @@ class CommitCrawler:
         return self._current_operation != CommitCrawlerState.IDLE
 
     def crawl(self, update_before_crawl=True, limit_tracked_branches_days_last_activity=None):
+        if self.is_busy():
+            return
+
         self._error_message = ''
         try:
             self.__crawl(update_before_crawl, limit_tracked_branches_days_last_activity)
@@ -157,8 +160,7 @@ class CommitCrawler:
         self._repo = git.Repo(self._repo_path)
         if update_before_crawl:
             self._current_operation = CommitCrawlerState.UPDATE_REPO
-            for remote in self._repo.remotes:
-                remote.fetch()
+            self._repo.remotes[0].fetch()
 
         self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
         self._commit_provider = CommitProvider()

@@ -1,5 +1,7 @@
 import threading
+import time
 
+import crontab
 from fastapi import APIRouter, HTTPException
 
 from configs import CrawlConfig, RepoConfig
@@ -11,6 +13,26 @@ router = APIRouter()
 
 repo_url = RepoConfig.load().repo_url
 crawler = CommitCrawler(REPO_PATH, repo_url)
+
+CHECK_PERIOD = 30  # in seconds
+def periodically_trigger_crawling():
+    while True:
+        config = CrawlConfig.load()
+        sleep_time = CHECK_PERIOD
+        execute_after_wait = False
+        if config.crawl_periodically_active:
+            time_to_next_update = crontab.CronTab(config.crawl_periodically_crontab).next(default_utc=True)
+            print(time_to_next_update)
+            execute_after_wait = time_to_next_update <= CHECK_PERIOD
+            sleep_time = min(CHECK_PERIOD, time_to_next_update)
+
+        time.sleep(sleep_time)
+        if execute_after_wait:
+            crawler.crawl(config.update_before_crawl, config.limit_tracked_branches_days_last_activity)
+
+
+periodic_crawl_thread = threading.Thread(target=periodically_trigger_crawling, daemon=True)
+periodic_crawl_thread.start()
 
 
 @router.get('/status')
@@ -31,7 +53,12 @@ async def update_db():
 
 @router.put('/config')
 async def write_config(crawl_config: CrawlConfig):
-    crawl_config.save_file()
+    try:
+        crontab.CronTab(crawl_config.crawl_periodically_crontab)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f'The given crontab is not valid: {e}')
+    else:
+        crawl_config.save_file()
 
 
 @router.get('/config')
