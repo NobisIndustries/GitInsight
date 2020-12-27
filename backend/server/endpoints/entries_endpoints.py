@@ -5,9 +5,9 @@ from helpers.api_helpers import deescape_forward_slashes, decode
 router = APIRouter()
 
 queries = None
-def set_queries(queries_object):
+def set_queries(queries_instance):
     global queries
-    queries = queries_object
+    queries = queries_instance
 
 
 @router.get('/availableBranches')

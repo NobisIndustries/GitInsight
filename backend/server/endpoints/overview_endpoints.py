@@ -5,9 +5,9 @@ from helpers.api_helpers import decode, deescape_forward_slashes
 router = APIRouter()
 
 queries = None
-def set_queries(queries_object):
+def set_queries(queries_instance):
     global queries
-    queries = queries_object
+    queries = queries_instance
 
 
 @router.get('/count_and_team_of_dirs/{branch_base64}')
