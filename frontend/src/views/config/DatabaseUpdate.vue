@@ -3,7 +3,18 @@
     <v-row justify="center">
       <v-col cols="12" md="8" xl="7">
         <CardWithHelp
-            help_text=""
+            help_text="<p>Configure your update settings here. GitInsight parses all commits and related data to
+                       a database to speed up calculations. This database has to be updated regularly with the
+                       newest repository data. This update can be triggered:</p><p><ul>
+                       <li><b>Manually</b>: Click on the &quotSave & Update now&quot button.</li>
+                       <li><b>Periodically</b>: Update at a given time or interval. Specify the time with crontab
+                       syntax.</li>
+                       <li><b>With webhook</b>: Send a POST request to <i>[gitinsight-url]/api/crawl/update_webhook</i>
+                       with body:<br>{&quottoken&quot: &quot[webhook token]&quot}. </li></ul></p>
+                       <p>By default you fetch the recent changes from the remote before updating the database. You
+                       should only change this option for debug and testing purposes. You can also choose if you want
+                       to track &quotold&quot branches - e.g. branches that had no commits in a configurable
+                       timespan.</p>"
             class="px-10 pb-5"
         >
           <v-col>
