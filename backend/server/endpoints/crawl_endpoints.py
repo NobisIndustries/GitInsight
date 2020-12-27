@@ -3,6 +3,7 @@ import time
 
 import crontab
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from configs import CrawlConfig, RepoConfig
 from helpers.path_helpers import REPO_PATH
@@ -49,6 +50,20 @@ async def update_db():
     t = threading.Thread(target=crawler.crawl, args=[config.update_before_crawl,
                                                      config.limit_tracked_branches_days_last_activity])
     t.start()
+
+
+class WebhookToken(BaseModel):
+    token: str
+
+
+@router.post('/update_webhook')
+async def update_db_webhook(payload: WebhookToken):
+    config = CrawlConfig.load()
+    if not config.webhook_active:
+        raise HTTPException(status_code=405, detail='Update via webhook is disabled')
+    if not config.webhook_token == payload.token:
+        raise HTTPException(status_code=403, detail='The given token is incorrect')
+    await update_db()
 
 
 @router.put('/config')
