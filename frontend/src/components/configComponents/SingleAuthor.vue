@@ -6,16 +6,34 @@
     <v-autocomplete
         :value="author_info.team_id"
         :items="available_teams"
-        color="primary"
+        item-text="name"
+        item-value="name"
         label="Belongs to team"
         dense
-    ></v-autocomplete>
+    >
+      <template v-slot:item="{ item }">
+        <v-list-item-content>
+          <div
+              class="color-swatch"
+              :style="{ background: item.color }"
+          ></div>
+          {{ item.name }}
+        </v-list-item-content>
+      </template>
+    </v-autocomplete>
   </div>
 </template>
 
 <style scoped>
 .author-name {
   width: 20rem;
+}
+.color-swatch {
+  display: inline;
+  max-width: 1rem;
+  height: 1rem;
+  margin: 0.5rem;
+  padding: 0;
 }
 </style>
 

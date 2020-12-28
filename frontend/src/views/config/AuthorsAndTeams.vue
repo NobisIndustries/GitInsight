@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row justify="center">
-      <v-col cols="12" md="8" xl="7">
+      <v-col cols="12" md="9" xl="7">
         <CardWithHelp
             help_text=""
         >
@@ -50,7 +50,8 @@ export default {
   },
   computed: {
     available_teams() {
-      return Object.keys(this.$store.state.config.teams);
+      let team_names = Object.keys(this.$store.state.config.teams);
+      return team_names.map(name => ({name: name, color: this.$store.state.config.teams[name].team_display_color}));
     },
     available_authors() {
       const all_authors = Object.keys(this.$store.state.config.authors);
