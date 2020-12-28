@@ -11,6 +11,9 @@ export const config_store = {
             error_message: '',
         },
         crawl_config: {},
+
+        authors: {},
+        teams: {}
     },
     mutations: {
         calculate_crawl_progress(state, status) {
@@ -54,7 +57,13 @@ export const config_store = {
         },
         set_crawl_config(state, config) {
             state.crawl_config = config;
-        }
+        },
+        set_authors(state, authors) {
+            state.authors = authors;
+        },
+        set_teams(state, teams) {
+            state.teams = teams;
+        },
 
     },
 
@@ -73,6 +82,18 @@ export const config_store = {
         load_crawl_status(context) {
             let request = axios.get(`${API_BASE_PATH}/crawl/status`).then(response => {
                 context.commit('calculate_crawl_progress', response.data);
+            });
+            return request;
+        },
+        load_authors(context) {
+            let request = axios.get(`${API_BASE_PATH}/authors/authors`).then(response => {
+                context.commit('set_authors', response.data['authors']);
+            });
+            return request;
+        },
+        load_teams(context) {
+            let request = axios.get(`${API_BASE_PATH}/authors/teams`).then(response => {
+                context.commit('set_teams', response.data['teams']);
             });
             return request;
         },
