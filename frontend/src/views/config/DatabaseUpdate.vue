@@ -22,22 +22,22 @@
             <div class="card-subheading">Current Status</div>
             <div class="settings-block">
               <v-progress-linear
-                  :value="$store.state.common.crawl_percentage"
-                  :color="$store.state.common.is_crawling ? 'primary' : 'grey lighten-1'"
+                  :value="$store.state.config.crawl_status.percentage"
+                  :color="$store.state.config.crawl_status.is_crawling ? 'primary' : 'grey lighten-1'"
               ></v-progress-linear>
               <div
                   class="message-text"
-                  :class="{'message-text-active': $store.state.common.is_crawling}"
+                  :class="{'message-text-active': $store.state.config.crawl_status.is_crawling}"
               >
-                {{ $store.state.common.crawl_status_message }}
+                {{ $store.state.config.crawl_status.status_message }}
               </div>
               <v-alert
                   type="error"
                   outlined
-                  v-show="$store.state.common.crawl_error_message !== ''"
+                  v-show="$store.state.config.crawl_status.error_message !== ''"
               >
                 An error occured while updating:<br>
-                {{ $store.state.common.crawl_error_message }}
+                {{ $store.state.config.crawl_status.error_message }}
               </v-alert>
             </div>
             <div class="card-subheading">Base Settings</div>
@@ -88,7 +88,7 @@
                   @click="trigger_update"
                   color="primary"
                   class="mr-5"
-                  :disabled="$store.state.common.is_crawling"
+                  :disabled="$store.state.config.crawl_status.is_crawling"
               >Save & Update now
               </v-btn>
               <v-btn
@@ -162,7 +162,7 @@ export default {
     }, 1000);
 
     this.$store.dispatch('load_crawl_config').then(() => {
-      this.crawl_config = this.$store.state.common.crawl_config;
+      this.crawl_config = this.$store.state.config.crawl_config;
     });
   },
   beforeDestroy() {
