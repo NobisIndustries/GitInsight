@@ -61,6 +61,9 @@ export const config_store = {
         set_authors(state, authors) {
             state.authors = authors;
         },
+        update_author_info(state, {author_name, author_info}) {
+            state.authors[author_name] = author_info;
+        },
         set_teams(state, teams) {
             state.teams = teams;
         },
@@ -85,16 +88,16 @@ export const config_store = {
             });
             return request;
         },
-        load_authors(context) {
-            let request = axios.get(`${API_BASE_PATH}/authors/authors`).then(response => {
+        load_author_info(context) {
+            let request = axios.get(`${API_BASE_PATH}/authors/info`).then(response => {
+                context.commit('set_teams', response.data['teams']);
                 context.commit('set_authors', response.data['authors']);
             });
             return request;
         },
-        load_teams(context) {
-            let request = axios.get(`${API_BASE_PATH}/authors/teams`).then(response => {
-                context.commit('set_teams', response.data['teams']);
-            });
+        save_author_info(context) {
+            const data = {authors: context.state.authors, teams: context.state.teams};
+            let request = axios.put(`${API_BASE_PATH}/authors/info`, data);
             return request;
         },
     },

@@ -42,13 +42,12 @@ class AuthorsConfig(JsonBaseConfig):
     def _get_config_path(cls):
         return 'authors.json'
 
-    authors: Dict[str, Dict[str, str]] = {}
 
 
-class TeamsConfig(JsonBaseConfig):
+class AuthorInfoConfig(JsonBaseConfig):
     @classmethod
     def _get_config_path(cls):
-        return 'teams.json'
+        return 'author_info.json'
 
     @classmethod
     def _after_load(cls, config):
@@ -63,6 +62,7 @@ class TeamsConfig(JsonBaseConfig):
         if 'UNKNOWN' not in config.teams:
             config.teams.update(fallback_team)
 
+    authors: Dict[str, Dict[str, str]] = {}
     teams: Dict[str, Dict[str, str]] = {}
 
 

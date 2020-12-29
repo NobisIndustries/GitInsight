@@ -1,12 +1,11 @@
 import functools
-from random import choice
-from typing import List, Iterable, Dict
+from typing import List, Iterable
 
 import git
 import pandas as pd
 
 import db_schema as db
-from configs import AuthorsConfig, TeamsConfig
+from configs import AuthorInfoConfig
 from helpers.path_helpers import REPO_PATH
 from queries.sub_queries.file_operation_queries import FileOperationQueries
 from queries.sub_queries.general_info_queries import GeneralInfoQueries
@@ -22,27 +21,25 @@ class AuthorInfoProvider:
     }
     AUTHOR_COLUMN_NAME = db.SqlCommitMetadata.author.name
 
-    def __init__(self, authors: Dict[str, Dict[str, str]], teams: Dict[str, Dict[str, str]]):
-        self._authors = authors
-        self._teams = teams
+    def __init__(self, author_info: AuthorInfoConfig):
+        self._author_info = author_info
 
     def add_info_to_author_names(self, names: Iterable[str]) -> pd.DataFrame:
         additional_data = []
         for name in set(names):
-            person_info = self._authors.get(name, self.UNKNOWN_PERSON_INFO)
+            person_info = self._author_info.authors.get(name, self.UNKNOWN_PERSON_INFO)
             team_id = person_info['team_id']
-            team_id = choice(list(self._teams.keys()))
-            if team_id not in self._teams:
+            if team_id not in self._author_info.teams:
                 raise ValueError(f'Person "{name}" has a team ID of "{team_id}" that does not exist.')
 
             info = {self.AUTHOR_COLUMN_NAME: name}
             info.update(person_info)
-            info.update(self._teams[team_id])
+            info.update(self._author_info.teams[team_id])
             additional_data.append(info)
         return pd.DataFrame(additional_data)
 
     def get_all_teams_data(self) -> pd.DataFrame:
-        info = pd.DataFrame(self._teams).transpose()
+        info = pd.DataFrame(self._author_info.teams).transpose()
         info['team_name'] = info.index
         info.reset_index(inplace=True, drop=True)
         return info
@@ -71,7 +68,7 @@ class BranchInfoProvider:
 class Queries:
     def __init__(self):
         db_session = db.get_session()
-        author_info_provider = AuthorInfoProvider(AuthorsConfig.load().authors, TeamsConfig.load().teams)
+        author_info_provider = AuthorInfoProvider(AuthorInfoConfig.load())
         branch_info_provider = BranchInfoProvider()
 
         self.general_info = GeneralInfoQueries(db_session)
@@ -81,9 +78,9 @@ class Queries:
 
 if __name__ == '__main__':
     q = Queries()
-    #print(q.general_info.get_all_authors())
-    #print(q.general_info.get_all_branches())
-    #print(q.general_info.get_all_paths_in_branch('master'))
+    # print(q.general_info.get_all_authors())
+    # print(q.general_info.get_all_branches())
+    # print(q.general_info.get_all_paths_in_branch('master'))
     print(q.file_operations.get_history_of_path('Python/', 'master'))
-    #print(q.overview.calculate_count_and_best_team_of_dir('master'))
+    # print(q.overview.calculate_count_and_best_team_of_dir('master'))
     print(q.overview.calculate_loc_vs_edit_counts('master'))
