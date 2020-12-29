@@ -16,7 +16,7 @@ class AuthorInfoProvider:
     UNKNOWN_PERSON_INFO = {
         'team_id': 'UNKNOWN',
         'person_image_url': '',
-        'person_description': 'There is no information for this person',
+        'person_description': '',
         'person_contact_link': ''
     }
     AUTHOR_COLUMN_NAME = db.SqlCommitMetadata.author.name

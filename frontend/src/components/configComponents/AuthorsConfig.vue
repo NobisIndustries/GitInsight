@@ -1,11 +1,18 @@
 <template>
   <div>
-    <v-text-field
-        v-model="name_filter"
-        label="Filter names"
-        @input="author_page = 1"
-        clearable
-    ></v-text-field>
+    <div class="d-flex flex-row">
+      <v-text-field
+          v-model="name_filter"
+          label="Filter names"
+          @input="author_page = 1"
+          clearable
+          class="mr-5"
+      ></v-text-field>
+      <v-switch
+          v-model="only_unknown_filter"
+          label="Only show unknown authors"
+      ></v-switch>
+    </div>
     <div>
       <SingleAuthor
           v-for="author_name in currently_displayed_author_names"
@@ -36,6 +43,7 @@ export default {
     return {
       author_page: 1,
       name_filter: '',
+      only_unknown_filter: false,
     };
   },
   computed: {
@@ -45,9 +53,7 @@ export default {
     },
     available_authors() {
       const all_authors = Object.keys(this.$store.state.config.authors).sort();
-      if (!this.name_filter)
-        return all_authors;
-      return all_authors.filter(name => (name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0));
+      return all_authors.filter(this.determine_author_visibility);
     },
     number_author_pages() {
       return Math.ceil(this.available_authors.length / AUTHORS_PER_PAGE);
@@ -61,6 +67,15 @@ export default {
   methods: {
     update_author(author_name, author_info) {
       this.$store.commit('update_author_info', {author_name, author_info: author_info});
+    },
+    determine_author_visibility(author_name) {
+      let name_match = true;
+      if (this.name_filter)
+        name_match = author_name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0;
+      let show_unknown_match = true;
+      if (this.only_unknown_filter)
+        show_unknown_match = this.$store.state.config.authors[author_name].team_id === 'UNKNOWN';
+      return name_match && show_unknown_match;
     },
   },
 }
