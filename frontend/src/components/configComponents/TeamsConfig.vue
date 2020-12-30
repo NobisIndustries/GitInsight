@@ -18,6 +18,8 @@
         :team_name="team_name"
         :team_info_init="$store.state.config.teams[team_name]"
         :key="team_name"
+        @update="update_team(team_name, $event)"
+        @delete="delete_team(team_name)"
     />
     <v-pagination
         v-model="team_page"
@@ -87,7 +89,7 @@ export default {
 
       let empty_team_info = {
         team_display_name: '',
-        team_display_color: '',
+        team_display_color: random_color(),
         team_description: '',
         team_contact_link: ''
       };
@@ -101,6 +103,10 @@ export default {
       this.$store.commit('delete_team', team_name);
     }
   },
+}
+
+function random_color() {  // https://stackoverflow.com/a/1152508
+  return '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
 }
 </script>
 

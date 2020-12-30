@@ -5,7 +5,7 @@
         :style="{background: color}"
         @click="show_picker = !show_picker"
     ></div>
-    <div class="overlay" @click="show_picker = false" v-if="show_picker"></div>
+    <div class="overlay" @click="update" v-if="show_picker"></div>
     <v-scroll-x-transition>
       <v-color-picker
           v-model="color"
@@ -52,18 +52,15 @@ export default {
   },
   data() {
     return {
-      color: this.value ? this.value : random_color(),
+      color: this.value,
       show_picker: false,
     };
   },
   methods: {
     update() {
       this.$emit('input', this.color);
+      this.show_picker = false;
     }
   }
-}
-
-function random_color() {  // https://stackoverflow.com/a/1152508
-  return '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
 }
 </script>

@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import axios from "axios";
 
 import {API_BASE_PATH} from '@/store/constants'
@@ -62,16 +63,19 @@ export const config_store = {
             state.authors = authors;
         },
         update_author_info(state, {author_name, author_info}) {
-            state.authors[author_name] = author_info;
+            // Preserves reactivity, see https://vuejs.org/v2/guide/reactivity.html#For-Objects
+            Vue.set(state.authors, author_name, author_info);
         },
         set_teams(state, teams) {
             state.teams = teams;
         },
         update_team_info(state, {team_name, team_info}) {
-            state.teams[team_name] = team_info;
+            // Preserves reactivity, see https://vuejs.org/v2/guide/reactivity.html#For-Objects
+            Vue.set(state.teams, team_name, team_info);
         },
         delete_team(state, team_name) {
-            delete state.teams[team_name];
+            Vue.delete(state.teams, team_name);
+
         }
 
     },
