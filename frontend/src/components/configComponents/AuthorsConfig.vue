@@ -33,6 +33,7 @@
 
 <script>
 import SingleAuthor from "@/components/configComponents/SingleAuthor";
+import {UNKNOWN_TEAM_ID} from "@/store/constants";
 
 const AUTHORS_PER_PAGE = 10;
 
@@ -74,7 +75,7 @@ export default {
         name_match = author_name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0;
       let show_unknown_match = true;
       if (this.only_unknown_filter)
-        show_unknown_match = this.$store.state.config.authors[author_name].team_id === 'UNKNOWN';
+        show_unknown_match = this.$store.state.config.authors[author_name].team_id === UNKNOWN_TEAM_ID;
       return name_match && show_unknown_match;
     },
   },

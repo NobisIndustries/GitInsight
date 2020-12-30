@@ -67,6 +67,12 @@ export const config_store = {
         set_teams(state, teams) {
             state.teams = teams;
         },
+        update_team_info(state, {team_name, team_info}) {
+            state.teams[team_name] = team_info;
+        },
+        delete_team(state, team_name) {
+            delete state.teams[team_name];
+        }
 
     },
 

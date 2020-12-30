@@ -8,7 +8,14 @@
         >
           <v-col>
             <div class="card-heading">Author Information</div>
-            <AuthorsConfig/>
+            <v-tabs v-model="active_tab" fixed-tabs>
+              <v-tab key="author">Edit Authors</v-tab>
+              <v-tab key="team">Edit Teams</v-tab>
+            </v-tabs>
+            <v-tabs-items v-model="active_tab" class="pa-5">
+              <v-tab-item key="author"><AuthorsConfig/></v-tab-item>
+              <v-tab-item key="team"><TeamsConfig/></v-tab-item>
+            </v-tabs-items>
             <div align="right">
               <v-btn
                   @click="save"
@@ -26,10 +33,16 @@
 <script>
 import CardWithHelp from '@/components/commonComponents/CardWithHelp';
 import AuthorsConfig from "@/components/configComponents/AuthorsConfig";
+import TeamsConfig from "@/components/configComponents/TeamsConfig";
 
 export default {
   name: 'AuthorsAndTeamsConfig',
-  components: {AuthorsConfig, CardWithHelp},
+  components: {TeamsConfig, AuthorsConfig, CardWithHelp},
+  data() {
+    return {
+      active_tab: null,
+    };
+  },
   methods: {
     save() {
       this.$store.dispatch('save_author_info');
