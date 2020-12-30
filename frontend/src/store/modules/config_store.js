@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import axios from "axios";
 
-import {API_BASE_PATH} from '@/store/constants'
+import {API_BASE_PATH, UNKNOWN_TEAM_ID} from '@/store/constants'
 
 export const config_store = {
     state: {
@@ -73,9 +73,10 @@ export const config_store = {
             // Preserves reactivity, see https://vuejs.org/v2/guide/reactivity.html#For-Objects
             Vue.set(state.teams, team_name, team_info);
         },
-        delete_team(state, team_name) {
+        delete_team(state, {team_name, author_names_to_reset}) {
+            for (let author_name of author_names_to_reset)
+                state.authors[author_name].team_id = UNKNOWN_TEAM_ID;
             Vue.delete(state.teams, team_name);
-
         }
 
     },

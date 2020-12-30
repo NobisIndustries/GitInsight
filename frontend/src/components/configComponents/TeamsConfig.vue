@@ -1,17 +1,17 @@
 <template>
   <div class="pt-5">
     <div class="d-flex flex-row">
-    <v-text-field
-        v-model="new_team_input"
-        :rules="new_team_rules"
-        label="Add team"
-        placeholder="New team ID"
-        hint="This is a unique identifier that cannot be changed afterwards"
-        append-icon="mdi-plus-circle"
-        @click:append="add_team"
-        outlined
-        class="team-id-input"
-    ></v-text-field>
+      <v-text-field
+          v-model="new_team_input"
+          :rules="new_team_rules"
+          label="Add team"
+          placeholder="New team ID"
+          hint="This is a unique identifier that cannot be changed afterwards"
+          append-icon="mdi-plus-circle"
+          @click:append="add_team"
+          outlined
+          class="team-id-input"
+      ></v-text-field>
     </div>
     <SingleTeam
         v-for="team_name in currently_displayed_teams"
@@ -19,19 +19,56 @@
         :team_info_init="$store.state.config.teams[team_name]"
         :key="team_name"
         @update="update_team(team_name, $event)"
-        @delete="delete_team(team_name)"
+        @delete="delete_team_with_confirmation(team_name)"
     />
     <v-pagination
         v-model="team_page"
         :length="number_team_pages"
         total-visible="7"
     ></v-pagination>
+    <v-dialog
+        v-model="show_delete_warning"
+        persistent
+        max-width="500"
+    >
+      <v-card>
+        <v-card-title class="headline">Delete Team?</v-card-title>
+        <v-card-text>
+          <p>This team has <b>{{ authors_assigned_to_team_to_delete.length }}</b> authors assigned to it.</p>
+          <p>If you delete it, these authors will be assigned to the base team "UNKNOWN".</p>
+          Affected authors:
+          <p class="affetcted-authors">{{ authors_assigned_to_team_to_delete.join(', ') }}</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              color="error"
+              text
+              @click="show_delete_warning = false; delete_team()"
+          >
+            Delete
+          </v-btn>
+          <v-btn
+              color="secondary"
+              text
+              @click="show_delete_warning = false"
+          >
+            Cancel
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <style scoped>
 .team-id-input {
   width: 15rem;
+}
+
+.affetcted-authors {
+  opacity: 0.7;
+  font-size: 80%;
 }
 </style>
 
@@ -49,8 +86,12 @@ export default {
       new_team_input: '',
       newly_created_team: null,
       new_team_rules: [
-          value => (!this.available_teams.includes(value) || 'This team already exists!'),
+        value => (!this.available_teams.includes(value) || 'This team already exists!'),
       ],
+
+      show_delete_warning: false,
+      team_to_delete: null,
+      authors_assigned_to_team_to_delete: [],
     };
   },
   computed: {
@@ -84,7 +125,7 @@ export default {
       this.$store.commit('update_team_info', {team_name, team_info});
     },
     add_team() {
-      if(!this.new_team_input || this.available_teams.includes(this.new_team_input))
+      if (!this.new_team_input || this.available_teams.includes(this.new_team_input))
         return;
 
       let empty_team_info = {
@@ -99,8 +140,27 @@ export default {
       this.new_team_input = '';
       this.team_page = 1;
     },
-    delete_team(team_name) {
-      this.$store.commit('delete_team', team_name);
+    get_authors_in_team(team_name) {
+      let authors = []
+      for (const [author_name, author_info] of Object.entries(this.$store.state.config.authors)) {
+        if (author_info.team_id === team_name)
+          authors.push(author_name);
+      }
+      return authors.sort();
+    },
+    delete_team_with_confirmation(team_name) {
+      this.team_to_delete = team_name;
+      this.authors_assigned_to_team_to_delete = this.get_authors_in_team(team_name);
+      if (this.authors_assigned_to_team_to_delete.length > 0)
+        this.show_delete_warning = true;
+      else
+        this.delete_team();
+    },
+    delete_team() {
+      this.$store.commit('delete_team', {
+        team_name: this.team_to_delete,
+        author_names_to_reset: this.authors_assigned_to_team_to_delete
+      });
     }
   },
 }
