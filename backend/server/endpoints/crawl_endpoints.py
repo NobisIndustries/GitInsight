@@ -1,55 +1,24 @@
-import threading
-import time
-
 import crontab
+import requests
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from configs import CrawlConfig, RepoConfig
-from helpers.path_helpers import REPO_PATH
+from configs import CrawlConfig
+from constants import CRAWL_SERVICE_PORT
 from helpers.security_helpers import get_random_token
-from repo_management.git_crawler import CommitCrawler
 
 router = APIRouter()
-
-repo_url = RepoConfig.load().repo_url
-crawler = CommitCrawler(REPO_PATH, repo_url)
-
-CHECK_PERIOD = 30  # in seconds
-def periodically_trigger_crawling():
-    while True:
-        config = CrawlConfig.load()
-        sleep_time = CHECK_PERIOD
-        execute_after_wait = False
-        if config.crawl_periodically_active:
-            time_to_next_update = crontab.CronTab(config.crawl_periodically_crontab).next(default_utc=True)
-            print(time_to_next_update)
-            execute_after_wait = time_to_next_update <= CHECK_PERIOD
-            sleep_time = min(CHECK_PERIOD, time_to_next_update)
-
-        time.sleep(sleep_time)
-        if execute_after_wait:
-            crawler.crawl(config.update_before_crawl, config.limit_tracked_branches_days_last_activity)
-
-
-periodic_crawl_thread = threading.Thread(target=periodically_trigger_crawling, daemon=True)
-periodic_crawl_thread.start()
+CRAWL_SERVICE_IP = f'http://127.0.0.1:{CRAWL_SERVICE_PORT}'
 
 
 @router.get('/status')
 async def get_crawler_status():
-    return crawler.get_status()
+    return requests.get(f'{CRAWL_SERVICE_IP}/crawl').json()
 
 
 @router.put('/update')
 async def update_db():
-    if crawler.is_busy():
-        raise HTTPException(status_code=409, detail='Already updating')
-
-    config = CrawlConfig.load()
-    t = threading.Thread(target=crawler.crawl, args=[config.update_before_crawl,
-                                                     config.limit_tracked_branches_days_last_activity])
-    t.start()
+    requests.put(f'{CRAWL_SERVICE_IP}/crawl').raise_for_status()
 
 
 class WebhookToken(BaseModel):

@@ -2,8 +2,9 @@ name: GitInsight
 channels:
   - defaults
 dependencies:
-  - gitpython
   - pip
+  - requests
+  - gitpython
   - pandas
   - sqlalchemy
   - pip:

@@ -115,9 +115,8 @@ class CommitCrawlerState:
 
 class CommitCrawler:
 
-    def __init__(self, repo_path: Path, repo_url: str):
+    def __init__(self, repo_path: Path):
         self._repo_path = Path(repo_path)
-        self._repo_url = repo_url
 
         self._repo = None
         self._commit_provider = None
@@ -130,7 +129,13 @@ class CommitCrawler:
         self._current_operation = CommitCrawlerState.IDLE
         self._error_message = ''
 
-    def get_status(self):
+    def is_checked_out(self):
+        return Path(self._repo_path, '.git').exists()
+
+    def checkout(self, repo_url):
+        git.Repo.clone_from(repo_url, self._repo_path, no_checkout=True)
+
+    def get_crawl_status(self):
         return {
             'commits_processed': self._commits_processed,
             'commits_total': self._commits_total,
@@ -153,9 +158,8 @@ class CommitCrawler:
             self._current_operation = CommitCrawlerState.IDLE
 
     def __crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
-        if not Path(self._repo_path, '.git').exists():
-            self._current_operation = CommitCrawlerState.CLONE_REPO
-            git.Repo.clone_from(self._repo_url, self._repo_path, no_checkout=True)
+        if not self.is_checked_out():
+            raise FileNotFoundError('The repository has not been checked out yet.')
 
         self._repo = git.Repo(self._repo_path)
         if update_before_crawl:
@@ -288,6 +292,6 @@ class CrawlResult:
 
 
 if __name__ == '__main__':
-    crawler = CommitCrawler(REPO_PATH, 'https://github.com/python/cpython.git')
+    crawler = CommitCrawler(REPO_PATH)
     crawler.crawl()
     print('Finished!')

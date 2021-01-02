@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,5 +29,3 @@ app.include_router(authors_endpoints.router, prefix=f'{COMMON_API_PREFIX}/author
 app.include_router(entries_endpoints.router, prefix=f'{COMMON_API_PREFIX}/entries', tags=['entries'])
 app.include_router(overview_endpoints.router, prefix=f'{COMMON_API_PREFIX}/overview', tags=['overview'])
 
-if __name__ == '__main__':
-    uvicorn.run(app, host='127.0.0.1', port=8000)
