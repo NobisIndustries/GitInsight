@@ -62,13 +62,17 @@ class BranchInfoProvider:
     @cache(limit=10)
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
         repo = git.Repo(REPO_PATH)
-        return repo.git.execute(f'git log "origin/{branch}" --pretty=format:%H').splitlines()
+        branch = f'origin/{branch}'
+        available_branches = [ref.name for ref in repo.remotes[0].refs]
+        if branch not in available_branches:
+            raise ValueError(f'Branch "{branch}" is invalid.')
+        return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
 
 
 class Queries:
     def __init__(self):
         db_session = db.get_session()
-        author_info_provider = AuthorInfoProvider(AuthorInfoConfig.load())
+        author_info_provider = AuthorInfoProvider()
         branch_info_provider = BranchInfoProvider()
 
         self.general_info = GeneralInfoQueries(db_session)

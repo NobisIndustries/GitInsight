@@ -194,9 +194,7 @@ class CommitCrawler:
         return commit_hash_of_branch
 
     def __get_repo_branches(self):
-        branches_raw = self._repo.git.execute('git branch -r')
-        branches = [branch.strip() for branch in branches_raw.splitlines() if ' -> ' not in branch]
-        return branches
+        return [ref.name for ref in self._repo.remotes[0].refs]
 
     def __clean_origin_branch_name(self, branch_name):
         # We use the branches available from the origin remote repo, but want to present them
