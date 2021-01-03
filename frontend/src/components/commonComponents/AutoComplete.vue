@@ -9,7 +9,6 @@
         @keydown.up="on_arrow_up()"
         @keydown.enter="on_enter()"
         @focus="on_focus()"
-        @blur="on_defocus()"
         autocomplete="off"
     >
     <ul
@@ -30,6 +29,7 @@
       No results found...
     </div>
     </ul>
+    <div class="overlay" @click="is_open = false" v-if="is_open"></div>
   </div>
 </template>
 
@@ -88,6 +88,15 @@
   font-size: 85%;
   font-style: italic;
 }
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  z-index: 10;
+}
 </style>
 
 <script>
@@ -108,7 +117,7 @@ export default {
     min_length: {
       type: Number,
       required: false,
-      default: 2,
+      default: 0,
     },
     label_text: {
       type: String,
@@ -161,10 +170,6 @@ export default {
     on_focus() {
       if (this.search.length >= this.min_length)
         this.on_change();
-    },
-    on_defocus() {
-      // Wait for a bit before hiding the results window, so that a possible click on a result can be recognized
-      setTimeout(() => this.is_open = false, 300);
     },
   },
   watch: {

@@ -19,16 +19,14 @@
     <v-snackbar
         v-model="is_empty_notification"
         :timeout="6000"
-        color="info"
-        top
+        color="warning"
     >
       No results have been found.
     </v-snackbar>
     <v-snackbar
         v-model="too_many_results_notification"
         :timeout="6000"
-        color="info"
-        top
+        color="warning"
     >
       Found too many results. Only display last {{ limit_results_to }} file changes.
     </v-snackbar>
@@ -57,7 +55,7 @@ export default {
   },
   data() {
     return {
-      new_path: '',
+      new_path: this.$store.state.entry_details.current_entry_path,
       is_empty_notification: false,
       too_many_results_notification: false,
       limit_results_to: 3000

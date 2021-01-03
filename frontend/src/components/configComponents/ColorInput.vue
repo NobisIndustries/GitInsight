@@ -40,7 +40,6 @@
   width: 100%;
   overflow: hidden;
   z-index: 10;
-
 }
 </style>
 
