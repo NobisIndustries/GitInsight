@@ -37,13 +37,6 @@ class JsonBaseConfig(BaseModel):
         pass
 
 
-class AuthorsConfig(JsonBaseConfig):
-    @classmethod
-    def _get_config_path(cls):
-        return 'authors.json'
-
-
-
 class AuthorInfoConfig(JsonBaseConfig):
     @classmethod
     def _get_config_path(cls):
@@ -77,11 +70,3 @@ class CrawlConfig(JsonBaseConfig):
     crawl_periodically_crontab: str = '00 4 * * *'
     webhook_active: bool = False
     webhook_token: str = get_random_token()
-
-
-class RepoConfig(JsonBaseConfig):
-    @classmethod
-    def _get_config_path(cls):
-        return 'repo.json'
-
-    repo_url: str = ''

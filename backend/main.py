@@ -2,7 +2,7 @@ from multiprocessing import Process
 
 import uvicorn
 
-from constants import MAIN_SERVICE_PORT, CRAWL_SERVICE_PORT
+from constants import MAIN_SERVICE_PORT, CRAWL_SERVICE_PORT, CACHE_SERVICE_PORT
 
 
 class Services:
@@ -13,6 +13,10 @@ class Services:
     @staticmethod
     def run_crawler():
         uvicorn.run('repo_management.crawler_server:app', host='127.0.0.1', port=CRAWL_SERVICE_PORT, workers=1)
+
+    @staticmethod
+    def run_cache():
+        uvicorn.run('caching.caching_server:app', host='127.0.0.1', port=CACHE_SERVICE_PORT, workers=1)
 
 
 class ApplicationStarter:
@@ -26,6 +30,7 @@ class ApplicationStarter:
 
     def main(self):
         self.__start_in_process(Services.run_main)
+        self.__start_in_process(Services.run_cache)
         self.__start_in_process(Services.run_crawler)
 
 

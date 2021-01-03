@@ -1,10 +1,10 @@
-import functools
 from typing import List, Iterable
 
 import git
 import pandas as pd
 
 import db_schema as db
+from caching.caching_decorator import cache
 from configs import AuthorInfoConfig
 from helpers.path_helpers import REPO_PATH
 from queries.sub_queries.file_operation_queries import FileOperationQueries
@@ -59,10 +59,10 @@ class BranchInfoProvider:
         hashes_in_branch = self._get_hashes_in_branch(branch)
         return data.loc[data.hash.isin(hashes_in_branch)]
 
-    @functools.lru_cache(maxsize=10)
+    @cache(limit=10)
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
         repo = git.Repo(REPO_PATH)
-        return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
+        return repo.git.execute(f'git log "origin/{branch}" --pretty=format:%H').splitlines()
 
 
 class Queries:

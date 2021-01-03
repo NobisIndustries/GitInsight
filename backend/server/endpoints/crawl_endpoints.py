@@ -8,17 +8,17 @@ from constants import CRAWL_SERVICE_PORT
 from helpers.security_helpers import get_random_token
 
 router = APIRouter()
-CRAWL_SERVICE_IP = f'http://127.0.0.1:{CRAWL_SERVICE_PORT}'
+CRAWL_SERVICE_URL = f'http://127.0.0.1:{CRAWL_SERVICE_PORT}'
 
 
 @router.get('/status')
 async def get_crawler_status():
-    return requests.get(f'{CRAWL_SERVICE_IP}/crawl').json()
+    return requests.get(f'{CRAWL_SERVICE_URL}/crawl').json()
 
 
 @router.put('/update')
 async def update_db():
-    requests.put(f'{CRAWL_SERVICE_IP}/crawl').raise_for_status()
+    requests.put(f'{CRAWL_SERVICE_URL}/crawl').raise_for_status()
 
 
 class WebhookToken(BaseModel):
