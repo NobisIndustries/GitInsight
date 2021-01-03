@@ -21,25 +21,27 @@ class AuthorInfoProvider:
     }
     AUTHOR_COLUMN_NAME = db.SqlCommitMetadata.author.name
 
-    def __init__(self, author_info: AuthorInfoConfig):
-        self._author_info = author_info
+    def __init__(self):
+        pass
 
     def add_info_to_author_names(self, names: Iterable[str]) -> pd.DataFrame:
+        author_info = AuthorInfoConfig.load()
         additional_data = []
         for name in set(names):
-            person_info = self._author_info.authors.get(name, self.UNKNOWN_PERSON_INFO)
+            person_info = author_info.authors.get(name, self.UNKNOWN_PERSON_INFO)
             team_id = person_info['team_id']
-            if team_id not in self._author_info.teams:
+            if team_id not in author_info.teams:
                 raise ValueError(f'Person "{name}" has a team ID of "{team_id}" that does not exist.')
 
             info = {self.AUTHOR_COLUMN_NAME: name}
             info.update(person_info)
-            info.update(self._author_info.teams[team_id])
+            info.update(author_info.teams[team_id])
             additional_data.append(info)
         return pd.DataFrame(additional_data)
 
     def get_all_teams_data(self) -> pd.DataFrame:
-        info = pd.DataFrame(self._author_info.teams).transpose()
+        author_info = AuthorInfoConfig.load()
+        info = pd.DataFrame(author_info.teams).transpose()
         info['team_name'] = info.index
         info.reset_index(inplace=True, drop=True)
         return info
