@@ -6,6 +6,7 @@
           label="Filter names"
           @input="author_page = 1"
           clearable
+          outlined
           class="mr-5"
       ></v-text-field>
       <v-switch

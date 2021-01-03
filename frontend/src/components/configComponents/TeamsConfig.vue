@@ -37,7 +37,7 @@
           <p>This team has <b>{{ authors_assigned_to_team_to_delete.length }}</b> authors assigned to it.</p>
           <p>If you delete it, these authors will be assigned to the base team "UNKNOWN".</p>
           Affected authors:
-          <p class="affetcted-authors">{{ authors_assigned_to_team_to_delete.join(', ') }}</p>
+          <p class="affected-authors">{{ authors_assigned_to_team_to_delete.join(', ') }}</p>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -66,7 +66,7 @@
   width: 15rem;
 }
 
-.affetcted-authors {
+.affected-authors {
   opacity: 0.7;
   font-size: 80%;
 }

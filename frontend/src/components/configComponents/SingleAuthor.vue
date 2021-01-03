@@ -11,7 +11,7 @@
         {{ author_name }}
       </div>
       <div
-          class="color-swatch"
+          class="color-swatch mb-4"
           :style="{ background: team_color }"
       ></div>
       <v-autocomplete
@@ -84,6 +84,7 @@
 
 .team-selector {
   max-width: 20rem;
+  margin-top: 0.3rem;
 }
 
 .details {

@@ -19,7 +19,7 @@
       ></v-text-field>
       <v-btn
           icon
-          v-if="deletable"
+          :disabled="!deletable"
           class="delete-button"
           @click="$emit('delete')"
       >
