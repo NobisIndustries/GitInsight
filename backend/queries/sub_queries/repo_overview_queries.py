@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 import db_schema as db
+from caching.caching_decorator import cache
 from constants import PATH_SPLIT_CHAR
 
 NO_BEST_TEAM = 'Inconclusive'
@@ -19,6 +20,7 @@ class RepoOverviewQueries:
         self._branch_info_provider = branch_info_provider
         self._author_info_provider = author_info_provider
 
+    @cache(limit=20)
     def calculate_loc_vs_edit_counts(self, branch: str, last_days=None):
         data = self._query_loc_vs_edit_count_data(branch, last_days)
 
@@ -56,6 +58,7 @@ class RepoOverviewQueries:
     def __get_min_timestamp(self, last_days):
         return time.time() - (24 * 3600 * last_days) if last_days else 0
 
+    @cache(limit=20)
     def calculate_count_and_best_team_of_dir(self, branch: str, max_depth=3, last_days=None):
         data = self._query_count_and_teams_data(branch, last_days)
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)

@@ -5,12 +5,18 @@ import crontab
 from fastapi import FastAPI
 from fastapi import HTTPException
 
+from caching.caching_decorator import reset_cache
 from configs import CrawlConfig
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawler import CommitCrawler
 
 app = FastAPI()
 crawler = CommitCrawler(REPO_PATH)
+
+
+def crawl_with_reset(*args, **kwargs):
+    crawler.crawl(*args, **kwargs)
+    reset_cache()
 
 
 @app.get('/checkout')
@@ -29,13 +35,13 @@ def get_crawl_status():
 
 
 @app.put('/crawl')
-def crawl_db():
+def crawl_repo():
     if crawler.is_busy():
         raise HTTPException(status_code=409, detail='Already updating')
 
     config = CrawlConfig.load()
-    t = threading.Thread(target=crawler.crawl, args=[config.update_before_crawl,
-                                                     config.limit_tracked_branches_days_last_activity])
+    t = threading.Thread(target=crawl_with_reset, args=[config.update_before_crawl,
+                                                        config.limit_tracked_branches_days_last_activity])
     t.start()
 
 
@@ -51,7 +57,8 @@ def periodically_trigger_crawling(check_period_seconds=30):
 
         time.sleep(sleep_time)
         if execute_after_wait:
-            crawler.crawl(config.update_before_crawl, config.limit_tracked_branches_days_last_activity)
+            crawl_with_reset(config.update_before_crawl, config.limit_tracked_branches_days_last_activity)
+
 
 periodic_crawl_thread = threading.Thread(target=periodically_trigger_crawling, daemon=True)
 periodic_crawl_thread.start()

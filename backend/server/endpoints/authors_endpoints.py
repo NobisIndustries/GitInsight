@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from caching.caching_decorator import reset_cache
 from configs import AuthorInfoConfig
 from queries.main_queries import AuthorInfoProvider
 
@@ -25,3 +26,4 @@ async def get_author_info():
 @router.put('/info')
 async def set_author_info(author_info: AuthorInfoConfig):
     author_info.save_file()
+    reset_cache()

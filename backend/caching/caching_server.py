@@ -3,7 +3,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any
 
-import uvicorn
 from fastapi import FastAPI
 from pydantic.main import BaseModel
 
