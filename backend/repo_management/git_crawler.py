@@ -70,11 +70,18 @@ class CurrentFilesInfoCollector:
     def __repr__(self):
         return pprint.pformat(self._file_infos_of_branch)
 
+    def as_dict(self):
+        return {branch: [dict(entry._asdict()) for entry in entries]
+                for branch, entries in self._file_infos_of_branch.items()}
+
 
 class CommitProvider:
     """ Caches existing commit info objects from the database. If a requested commit info is not found,
      it creates a new one from the given data."""
     def __init__(self):
+        self._available_commits = {}
+
+    def cache_from_db(self):
         db_session = db.get_session()
         try:
             self._available_commits = self.__fetch_all_commits_from_db(db_session)
@@ -115,12 +122,11 @@ class CommitCrawlerState:
 
 class CommitCrawler:
 
-    def __init__(self, repo_path: Path):
+    def __init__(self, repo_path: Path, commit_provider: CommitProvider):
         self._repo_path = Path(repo_path)
+        self._commit_provider = commit_provider
 
         self._repo = None
-        self._commit_provider = None
-
         self._child_commit_graph = None
         self._latest_hashes = None
 
@@ -152,12 +158,14 @@ class CommitCrawler:
 
         self._error_message = ''
         try:
-            self.__crawl(update_before_crawl, limit_tracked_branches_days_last_activity)
+            result = self._crawl(update_before_crawl, limit_tracked_branches_days_last_activity)
+            self._current_operation = CommitCrawlerState.SAVE_TO_DB
+            result.write_to_db()
         except Exception as e:
             self._error_message = str(e)
-            self._current_operation = CommitCrawlerState.IDLE
+        self._current_operation = CommitCrawlerState.IDLE
 
-    def __crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
+    def _crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
         if not self.is_checked_out():
             raise FileNotFoundError('The repository has not been checked out yet.')
 
@@ -167,7 +175,7 @@ class CommitCrawler:
             self._repo.remotes[0].fetch()
 
         self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
-        self._commit_provider = CommitProvider()
+        self._commit_provider.cache_from_db()
 
         self._current_operation = CommitCrawlerState.EXTRACT_COMMITS
         all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
@@ -177,10 +185,7 @@ class CommitCrawler:
         self._latest_hashes = self.__get_latest_commits_of_branches(limit_tracked_branches_days_last_activity)
         current_paths_of_branches = self.__follow_files()
 
-        self._current_operation = CommitCrawlerState.SAVE_TO_DB
-        CrawlResult(self._child_commit_graph, current_paths_of_branches).write_to_db()
-
-        self._current_operation = CommitCrawlerState.IDLE
+        return CrawlResult(self._child_commit_graph, current_paths_of_branches)
 
     def __get_latest_commits_of_branches(self, limit_tracked_branches_days_last_activity):
         minTimestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
@@ -194,7 +199,9 @@ class CommitCrawler:
         return commit_hash_of_branch
 
     def __get_repo_branches(self):
-        return [ref.name for ref in self._repo.remotes[0].refs]
+        if len(self._repo.remotes) > 0:
+            return [ref.name for ref in self._repo.remotes[0].refs]
+        return [branch.name for branch in self._repo.branches]
 
     def __clean_origin_branch_name(self, branch_name):
         # We use the branches available from the origin remote repo, but want to present them
@@ -252,7 +259,7 @@ class CommitCrawler:
         for affected_file in child_commit.affected_files:
             change_type = affected_file.change_type
             if change_type == 'A':
-                file_id = affected_file.file_id or str(uuid4())
+                file_id = affected_file.file_id or self._get_unique_id()
             else:
                 file_id = branch_file_paths.inverse[affected_file.old_path]
 
@@ -266,6 +273,12 @@ class CommitCrawler:
             files_info_collector.add_branch_info(branch_name, child_commit_hash, dict(branch_file_paths))
         return child_commit_hash
 
+    def _get_unique_id(self):
+        return str(uuid4())
+
+    def __del__(self):
+        if self._repo:
+            self._repo.__del__()
 
 class CrawlResult:
     def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
@@ -290,6 +303,6 @@ class CrawlResult:
 
 
 if __name__ == '__main__':
-    crawler = CommitCrawler(REPO_PATH)
+    crawler = CommitCrawler(REPO_PATH, CommitProvider())
     crawler.crawl()
     print('Finished!')

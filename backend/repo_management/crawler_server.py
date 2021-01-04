@@ -8,10 +8,10 @@ from fastapi import HTTPException
 from caching.caching_decorator import reset_cache
 from configs import CrawlConfig
 from helpers.path_helpers import REPO_PATH
-from repo_management.git_crawler import CommitCrawler
+from repo_management.git_crawler import CommitCrawler, CommitProvider
 
 app = FastAPI()
-crawler = CommitCrawler(REPO_PATH)
+crawler = CommitCrawler(REPO_PATH, CommitProvider())
 
 
 def crawl_with_reset(*args, **kwargs):
