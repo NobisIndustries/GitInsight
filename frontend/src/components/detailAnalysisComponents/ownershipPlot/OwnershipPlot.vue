@@ -46,11 +46,13 @@ export default {
       plot_layout: {
         width: 900,
         margin: {
-          t: 10,
+          t: 30,
           b: 20,
           l: 10,
           r: 10
         },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
         grid: {rows: 1, columns: 2},
         legend: {
           orientation: 'h'

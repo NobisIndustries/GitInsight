@@ -30,6 +30,14 @@
         >
           <v-list-item-title>{{ subItem.title }}</v-list-item-title>
         </v-list-item>
+        <v-list-item>
+          <v-switch
+              v-model="$vuetify.theme.dark"
+              inset
+              label="Dark mode"
+              persistent-hint
+          ></v-switch>
+        </v-list-item>
       </v-list-group>
     </v-list>
   </v-navigation-drawer>
@@ -79,6 +87,14 @@
               :to="subItem.path"
           >
             <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item>
+            <v-switch
+                v-model="$vuetify.theme.dark"
+                inset
+                label="Dark mode"
+                persistent-hint
+            ></v-switch>
           </v-list-item>
         </v-list>
       </v-menu>

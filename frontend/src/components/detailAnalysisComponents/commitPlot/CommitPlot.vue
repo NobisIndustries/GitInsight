@@ -58,6 +58,8 @@ export default {
         yaxis: {
           automargin: true,
         },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 10,
           b: 30

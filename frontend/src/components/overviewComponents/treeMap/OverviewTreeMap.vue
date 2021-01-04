@@ -70,6 +70,13 @@ export default {
       selected_plot_type: undefined,
       show_relative_edit_counts: false,
       plot_layout: {
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        marker: {
+          line: {
+            color: '#ffffff',
+            width: 5
+          }
+        },
         margin: {
           t: 30,
           b: 10,
