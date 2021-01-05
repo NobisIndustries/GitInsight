@@ -13,7 +13,7 @@
     >
     <ul
         v-show="is_open"
-        class="autocomplete-results"
+        class="autocomplete-results elevation-4"
         :class="$vuetify.theme.dark ? 'theme--dark' : 'theme--light'"
     >
       <li
@@ -55,10 +55,10 @@
 }
 
 .autocomplete-results {
-  margin-top: 1rem;
-  padding: 0.5rem !important;
-  border: 0.02rem solid var(--v-accent-lighten1);
-  border-radius: 0.3rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0 !important;
   overflow: auto;
   position: absolute;
   z-index: 1000;
@@ -77,8 +77,8 @@
   list-style: none;
   text-align: left;
   padding: 0.5rem;
+  padding-left: 1rem;
   cursor: pointer;
-  border-radius: 0.3rem;
 }
 
 .theme--light .autocomplete-result.is-active,
