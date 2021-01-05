@@ -4,6 +4,7 @@ import time
 import crontab
 from fastapi import FastAPI
 from fastapi import HTTPException
+from starlette import status
 
 from caching.caching_decorator import reset_cache
 from configs import CrawlConfig
@@ -37,7 +38,7 @@ def get_crawl_status():
 @app.put('/crawl')
 def crawl_repo():
     if crawler.is_busy():
-        raise HTTPException(status_code=409, detail='Already updating')
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Already updating')
 
     config = CrawlConfig.load()
     t = threading.Thread(target=crawl_with_reset, args=[config.update_before_crawl,

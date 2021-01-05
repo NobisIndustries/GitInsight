@@ -2,6 +2,7 @@ import crontab
 import requests
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from starlette import status
 
 from configs import CrawlConfig
 from constants import CRAWL_SERVICE_PORT
@@ -29,9 +30,9 @@ class WebhookToken(BaseModel):
 async def update_db_webhook(payload: WebhookToken):
     config = CrawlConfig.load()
     if not config.webhook_active:
-        raise HTTPException(status_code=405, detail='Update via webhook is disabled')
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail='Update via webhook is disabled')
     if not config.webhook_token == payload.token:
-        raise HTTPException(status_code=403, detail='The given token is incorrect')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='The given token is incorrect')
     await update_db()
 
 
@@ -40,7 +41,7 @@ async def write_config(crawl_config: CrawlConfig):
     try:
         crontab.CronTab(crawl_config.crawl_periodically_crontab)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f'The given crontab is not valid: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'The given crontab is not valid: {e}')
     else:
         crawl_config.save_file()
 
