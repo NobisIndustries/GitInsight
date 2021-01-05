@@ -14,6 +14,7 @@
     <ul
         v-show="is_open"
         class="autocomplete-results"
+        :class="$vuetify.theme.dark ? 'theme--dark' : 'theme--light'"
     >
       <li
           v-for="(result, i) in results"
@@ -41,12 +42,12 @@
 
 .autocomplete-input {
   width: 100%;
-  color: var(--v-primary-base);
+  color: #ffffff;
 }
 
 .autocomplete-input::placeholder {
-  color: var(--v-primary-base);
-  opacity: 0.5;
+  color: #ffffff;
+  opacity: 0.8;
 }
 
 .autocomplete-input:focus {
@@ -56,13 +57,20 @@
 .autocomplete-results {
   margin-top: 1rem;
   padding: 0.5rem !important;
-  background-color: #ffffff;
-  border: 0.02rem solid var(--v-secondary-lighten1);
+  border: 0.02rem solid var(--v-accent-lighten1);
   border-radius: 0.3rem;
   overflow: auto;
   position: absolute;
   z-index: 1000;
   width: 100%;
+}
+
+.autocomplete-results.theme--light {
+  background: #ffffff;
+}
+
+.autocomplete-results.theme--dark {
+  background: #121212;
 }
 
 .autocomplete-result {
@@ -73,18 +81,22 @@
   border-radius: 0.3rem;
 }
 
-.autocomplete-result.is-active,
-.autocomplete-result:hover {
-  background-color: var(--v-primary-lighten3);
+.theme--light .autocomplete-result.is-active,
+.theme--light .autocomplete-result:hover {
+  background-color: var(--v-accent-lighten4);
+}
+.theme--dark autocomplete-result.is-active,
+.theme--dark .autocomplete-result:hover {
+  background-color: var(--v-accent-darken4);
 }
 
 .autocomplete_highlight {
   font-weight: bold;
-  color: var(--v-primary-base);
+  color: var(--v-accent-base);
 }
 
 .autocomplete-not-found {
-  color: var(--v-secondary-lighten4);
+  color: var(--v-accent-lighten3);
   font-size: 85%;
   font-style: italic;
 }

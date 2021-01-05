@@ -1,6 +1,6 @@
 <template>
   <CardWithHelp
-    help_text="<p>Your repository as a tree map. It includes two modes:<ul>
+      help_text="<p>Your repository as a tree map. It includes two modes:<ul>
                <li><b>Code Ownership</b>: Similar to the operations in the Detail Analysis section, this chart tells you
                which team has the most impact on the contents of a given directory based on the commits of its members.
                If multiple teams have made similar contributions, it will be tagged as 'Inconclusive'.</li>
@@ -71,12 +71,7 @@ export default {
       show_relative_edit_counts: false,
       plot_layout: {
         plot_bgcolor: 'rgba(0,0,0,0)',
-        marker: {
-          line: {
-            color: '#ffffff',
-            width: 5
-          }
-        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 30,
           b: 10,
@@ -132,8 +127,8 @@ function get_plot_data_counts(treemap_data, branch, color_relative) {
   });
 
   treemap_data = treemap_data.withColumn('text', row => (
-        `${(row.get('relative_edit_count') * 100).toFixed(1)}% of edits in parent dir<br>`
-        + `Total edit count: ${row.get('edit_count')}`));
+      `${(row.get('relative_edit_count') * 100).toFixed(1)}% of edits in parent dir<br>`
+      + `Total edit count: ${row.get('edit_count')}`));
 
   const value_column = color_relative ? 'relative_edit_count' : 'edit_count';
   const colorbar_title = color_relative ? 'Fraction of all<br>edits in parent dir' : 'Total edits'
@@ -145,6 +140,10 @@ function get_plot_data_counts(treemap_data, branch, color_relative) {
     values: treemap_data.toArray(value_column),
     text: treemap_data.toArray('text'),
     marker: {
+      line: {
+        color: '#ffffff',
+        width: 2
+      },
       colorscale: 'Greens',
       showscale: true,
       reversescale: true,
@@ -169,6 +168,10 @@ function get_plot_data_teams(treemap_data) {
     text: treemap_data.toArray('text'),
     marker: {
       colors: treemap_data.toArray('team_display_color'),
+      line: {
+        color: '#ffffff',
+        width: 2
+      }
     }
   }];
 }

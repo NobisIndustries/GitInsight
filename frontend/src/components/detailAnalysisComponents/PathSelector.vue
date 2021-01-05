@@ -9,7 +9,7 @@
     />
     <v-btn
         @click="load_entry()"
-        color="primary"
+        color="white"
         icon
         :loading="$store.state.entry_details.history_is_loading"
         :disabled="$store.state.entry_details.history_is_loading || new_path === ''"
@@ -39,7 +39,7 @@
   flex-direction: row;
   align-items: center;
 
-  border: 0.05rem solid var(--v-primary-base);
+  background: var(--v-accent-base);
   border-radius: 20rem;
   padding-left: 1rem;
 }
