@@ -6,6 +6,9 @@ export const common_store = {
     state: {
         available_branches: [],
         current_branch: null,
+
+        repo_name: null,
+        start_page_text: null,
     },
     mutations: {
         set_available_branches(state, branches) {
@@ -13,6 +16,12 @@ export const common_store = {
         },
         set_current_branch(state, branch) {
             state.current_branch = branch;
+        },
+        set_repo_name(state, name) {
+            state.repo_name = name;
+        },
+        set_start_page_text(state, text) {
+          state.start_page_text = text;
         },
     },
 
@@ -23,5 +32,18 @@ export const common_store = {
             });
             return request;
         },
+        load_description(context) {
+            let request = axios.get(`${API_BASE_PATH}/descriptions/description`).then(response => {
+                context.commit('set_repo_name', response.data.repo_name);
+                context.commit('set_start_page_text', response.data.start_page_text);
+            });
+            return request;
+        },
+        save_description(context) {
+            const data = {repo_name: context.state.repo_name, start_page_text: context.state.start_page_text}
+            let request = axios.put(`${API_BASE_PATH}/descriptions/description`, data);
+            return request;
+        }
+
     },
 };

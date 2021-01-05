@@ -12,14 +12,11 @@
             <span v-else><a v-bind:href="commit_info_row.get('person_contact_link')">
           {{ commit_info_row.get('author') }}</a>
         </span>
-            (
             <span v-if="commit_info_row.get('team_contact_link') === ''">
           {{ commit_info_row.get('team_display_name') }}
         </span>
-            <span v-else><a v-bind:href="commit_info_row.get('team_contact_link')">
-          {{ commit_info_row.get('team_display_name') }}</a>
-        </span>
-            )
+            <span v-else><a v-bind:href="commit_info_row.get('team_contact_link')"
+            >({{ commit_info_row.get('team_display_name')}})</a></span>
           </div>
           <div class="ml-5">
             <div v-if="commit_info_row.get('person_description') !== ''">

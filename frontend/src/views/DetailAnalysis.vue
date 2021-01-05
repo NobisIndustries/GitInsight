@@ -2,11 +2,11 @@
   <v-container fluid>
     <v-col align="center">
       <v-row justify="center">
-        <v-col cols="12" md="3">
-          <BranchSelector/>
-        </v-col>
-        <v-col cols="12" md="6" xl="5">
+        <v-col cols="12" md="6" xl="4">
           <PathSelector/>
+        </v-col>
+        <v-col cols="12" md="3" xl="2">
+          <BranchSelector/>
         </v-col>
       </v-row>
       <div v-show="show_plot">
