@@ -6,7 +6,7 @@
         style="cursor: pointer"
         class="d-flex align-center"
     >
-      <img src="logo.svg" width="30" class="mr-2"/>
+      <img src="logo.gif" width="30" class="mr-2"/>
       <div class="mr-1 font-weight-thin">GitInsight -</div>
       <input
           type="text"
