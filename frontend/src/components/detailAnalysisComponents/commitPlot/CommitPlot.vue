@@ -72,7 +72,7 @@ export default {
       let point_id = clicked_points.points[0].id;
       let entry_history = this.$store.getters.get_current_entry_history_dataframe;
       let selected_row = entry_history.filter({'index': point_id}).getRow(0);
-      this.$store.commit('set_selected_commit_detail_data', selected_row)
+      this.$store.commit('set_selected_commit_detail_data', selected_row.toDict())
     }
   },
   computed: {

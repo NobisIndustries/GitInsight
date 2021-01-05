@@ -2,44 +2,44 @@
   <v-card elevation="2">
     <v-card-text v-if="commit_info_row !== null" class="text-left pa-8">
       <div>
-        {{ commit_info_row.get('authored_date_time') }}
+        {{ commit_info_row.authored_date_time }}
       </div>
       <div class="d-flex">
         <div>
           <div class="text-h5">
-        <span v-if="commit_info_row.get('person_contact_link') === ''">
-          {{ commit_info_row.get('author') }}</span>
-            <span v-else><a v-bind:href="commit_info_row.get('person_contact_link')">
-          {{ commit_info_row.get('author') }}</a>
+        <span v-if="commit_info_row.person_contact_link === ''">
+          {{ commit_info_row.author }}</span>
+            <span v-else><a v-bind:href="commit_info_row.person_contact_link">
+          {{ commit_info_row.author }}</a>
         </span>
-            <span v-if="commit_info_row.get('team_contact_link') === ''">
-          {{ commit_info_row.get('team_display_name') }}
+            <span v-if="commit_info_row.team_contact_link === ''">
+          {{ commit_info_row.team_display_name }}
         </span>
-            <span v-else><a v-bind:href="commit_info_row.get('team_contact_link')"
-            >({{ commit_info_row.get('team_display_name')}})</a></span>
+            <span v-else><a v-bind:href="commit_info_row.team_contact_link"
+            >({{ commit_info_row.team_display_name}})</a></span>
           </div>
           <div class="ml-5">
-            <div v-if="commit_info_row.get('person_description') !== ''">
-              {{ commit_info_row.get('person_description') }}
+            <div v-if="commit_info_row.person_description !== ''">
+              {{ commit_info_row.person_description }}
             </div>
-            <div v-if="commit_info_row.get('team_description') !== ''">
-              {{ commit_info_row.get('team_description') }}
+            <div v-if="commit_info_row.team_description !== ''">
+              {{ commit_info_row.team_description }}
             </div>
           </div>
         </div>
-        <div v-if="commit_info_row.get('person_image_url') !== ''">
-          <img :src="commit_info_row.get('person_image_url')" alt="Author image" width="80">
+        <div v-if="commit_info_row.person_image_url !== ''">
+          <img :src="commit_info_row.person_image_url" alt="Author image" width="80">
         </div>
       </div>
       <div class="text-subtitle-1 mt-5">
-        {{ commit_info_row.get('hash').substring(0, 8) }}
-        ({{ commit_info_row.get('number_affected_files') }}
-        {{ commit_info_row.get('number_affected_files') > 1 ? 'files' : 'file' }} edited)
+        {{ commit_info_row.hash.substring(0, 8) }}
+        ({{ commit_info_row.number_affected_files }}
+        {{ commit_info_row.number_affected_files > 1 ? 'files' : 'file' }} edited)
       </div>
       <div class="small-caption">
-        {{ commit_info_row.get('hash') }}
+        {{ commit_info_row.hash }}
       </div>
-      <div class="ml-5 preserve-whitespace">{{ commit_info_row.get('message').trim() }}</div>
+      <div class="ml-5 preserve-whitespace">{{ commit_info_row.message.trim() }}</div>
     </v-card-text>
     <v-card-text v-else>
       Click on an entry in the graph above to display more information.
