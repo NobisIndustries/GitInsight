@@ -10,10 +10,10 @@
       <div class="mr-1 font-weight-thin">GitInsight -</div>
       <input
           type="text"
-          v-show="edit_mode"
+          v-if="edit_mode"
           class="title-input"
           v-model="title_computed"/>
-      <div v-show="!edit_mode">{{ title }}</div>
+      <div v-else>{{ title }}</div>
     </router-link>
     <v-btn
         v-if="can_edit"

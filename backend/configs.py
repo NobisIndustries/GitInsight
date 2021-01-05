@@ -75,19 +75,19 @@ class CrawlConfig(JsonBaseConfig):
 class ProjectDescriptionConfig(JsonBaseConfig):
     @classmethod
     def _get_config_path(cls):
-        return 'project_description'
+        return 'project_description.json'
 
     repo_name: str = 'My Repo'
     start_page_text: str = ('# Welcome to GitInsight - a better git history\n\n'
-                            '## What is it about?\n\n'
-                            'You want to get a feeling for your repository: Which development team maintains '
+                            '## What is this about?\n\n'
+                            'You want to get a feeling for your repository: *Which development team maintains '
                             'which part? What part is most active? Who can I ask for help with this class I\'ve never '
-                            'seen before? And are there architectural problems that I haven\'t noticed before?\n\n'
-                            'GitInsight lets you assign teams to the contributors of a git repository. Combined with '
-                            'the edit history of every tracked file this lets you get a better overview through '
-                            'various analyses.\n\n'
+                            'seen before? And are there architectural problems that I haven\'t noticed yet?*\n\n'
+                            'GitInsight lets you assign teams to the contributors of a git repository. Various '
+                            'analyses combine these metadata with the edit history of every tracked file to provide '
+                            'you with better overview.\n\n'
                             '## What to do next?\n\n'
                             'You should first [create teams and assign contributors to '
-                            'them|/config/authors_and_teams]. You can also configure when and how GitInsight [updates '
-                            'its database|/config/db_update] with new changes. Lastly you can also edit the repo title '
-                            'and even this text to better tailor this application to your visitors.')
+                            'them](/config/authors_and_teams). You can also configure when and how GitInsight [updates '
+                            'its database](/config/db_update) with new changes. Lastly you can also edit the repo '
+                            'title and this text to better tailor this application to your visitors.')

@@ -11,8 +11,9 @@
                        syntax.</li>
                        <li><b>With webhook</b>: Send a POST request to <i>[gitinsight-url]/api/crawl/update_webhook</i>
                        with body:<br>{&quottoken&quot: &quot[webhook token]&quot}. </li></ul></p>
-                       <p>By default you fetch the recent changes from the remote before updating the database. You
-                       should only change this option for debug and testing purposes. You can also choose if you want
+                       <p>By default you fetch the recent changes from the remote before updating the database -
+                       in normal operation there is no need to change that, but you can if you want to test things or
+                       provide your own local repo as base. You can also choose if you want
                        to track &quotold&quot branches - e.g. branches that had no commits in a configurable
                        timespan.</p>"
             class="px-10 pb-5"
@@ -23,7 +24,7 @@
             <div class="settings-block">
               <v-progress-linear
                   :value="$store.state.config.crawl_status.percentage"
-                  :color="$store.state.config.crawl_status.is_crawling ? 'primary' : 'grey lighten-1'"
+                  :color="$store.state.config.crawl_status.is_crawling ? 'accent' : 'grey lighten-1'"
               ></v-progress-linear>
               <div
                   class="message-text"
@@ -120,7 +121,7 @@
 }
 
 .message-text-active {
-  color: var(--v-primary-base);
+  color: var(--v-accent-base);
   opacity: 1;
 }
 </style>
