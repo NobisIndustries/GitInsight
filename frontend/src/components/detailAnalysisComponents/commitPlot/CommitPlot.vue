@@ -63,7 +63,10 @@ export default {
         margin: {
           t: 10,
           b: 30
-        }
+        },
+        legend: {
+          itemsizing: 'constant',
+        },
       }
     };
   },

@@ -19,10 +19,10 @@
         </v-col>
       </v-row>
       <v-row justify="center">
-        <v-col cols="12" md="6">
+        <v-col cols="12" lg="5">
           <AuthorClustersPlot />
         </v-col>
-        <v-col cols="12" md="6">
+        <v-col cols="12" lg="5">
           <LocVsEditCountsPlot/>
         </v-col>
       </v-row>

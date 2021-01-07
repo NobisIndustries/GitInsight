@@ -48,8 +48,13 @@ export default {
         plot_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 0,
-          b: 0
-        }
+          b: 0,
+          l: 0,
+          r: 0
+        },
+        legend: {
+          itemsizing: 'constant',
+        },
       },
     };
   },
@@ -69,20 +74,30 @@ export default {
           + `${row.get('commit_count')} commits`
       ));
 
-      return [{
-        x: clusters_data.toArray('x'),
-        y: clusters_data.toArray('y'),
-        hoverinfo: 'text',
-        hovertext: clusters_data.toArray('text'),
-        marker: {
-          size: clusters_data.toArray('scale'),
-          color: clusters_data.toArray('team_display_color'),
-        },
-        mode: 'markers',
-        type: "scatter",
-      }];
+      let plot_data = [];
+      let groupKey, group;
+      for ({groupKey, group} of clusters_data.groupBy('team_display_name')) {
+        plot_data.push(create_single_plot(groupKey.team_display_name, group));
+      }
+      return plot_data;
     },
   },
+}
+
+function create_single_plot(label, data) {
+  return {
+    x: data.toArray('x'),
+    y: data.toArray('y'),
+    hoverinfo: 'text',
+    hovertext: data.toArray('text'),
+    name: label,
+    marker: {
+      size: data.toArray('scale'),
+      color: data.toArray('team_display_color'),
+    },
+    mode: 'markers',
+    type: "scatter",
+  };
 }
 
 </script>

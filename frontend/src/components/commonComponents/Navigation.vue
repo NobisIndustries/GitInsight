@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-navigation-drawer
-        v-show="show_sidebar"
+        v-if="show_sidebar"
         v-model="show_sidebar"
         color="dark"
         dark
