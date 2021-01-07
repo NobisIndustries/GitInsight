@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-navigation-drawer
-        v-if="show_sidebar"
+        v-show="show_sidebar"
         v-model="show_sidebar"
         color="dark"
         dark
@@ -33,11 +33,7 @@
             <v-list-item-title>{{ subItem.title }}</v-list-item-title>
           </v-list-item>
           <v-list-item>
-            <v-switch
-                v-model="$vuetify.theme.dark"
-                inset
-                label="Dark mode"
-            ></v-switch>
+            <DarkModeSwitch />
           </v-list-item>
         </v-list-group>
       </v-list>
@@ -98,11 +94,7 @@
               <v-list-item-title>{{ subItem.title }}</v-list-item-title>
             </v-list-item>
             <v-list-item>
-              <v-switch
-                  v-model="$vuetify.theme.dark"
-                  inset
-                  label="Dark mode"
-              ></v-switch>
+              <DarkModeSwitch />
             </v-list-item>
           </v-list>
         </v-menu>
@@ -114,10 +106,11 @@
 
 <script>
 import EditableTitle from "@/components/infoComponents/EditableTitle";
+import DarkModeSwitch from "@/components/commonComponents/DarkModeSwitch";
 
 export default {
   name: 'Navigation',
-  components: {EditableTitle},
+  components: {DarkModeSwitch, EditableTitle},
   props: {
     title: String,
     menu_items: Array,

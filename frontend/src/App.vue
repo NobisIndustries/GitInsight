@@ -38,7 +38,9 @@ export default {
     }
   },
   mounted() {
-    this.$vuetify.theme.dark = false;
+    if(localStorage.getItem('dark_mode') === null)
+      localStorage.dark_mode = JSON.stringify(false);
+    this.$vuetify.theme.dark = JSON.parse(localStorage.dark_mode);
   },
 };
 </script>
