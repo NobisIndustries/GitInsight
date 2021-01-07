@@ -8,6 +8,7 @@ from queries.sub_queries.author_clustering import AuthorClustererQuery
 class AuthorClusteringTest(unittest.TestCase):
     def test_tokenize(self):
         clusterer = AuthorClustererQuery(None, None, None)
+        clusterer.MIN_COMMITS = 1
 
         data = pd.DataFrame({
             'current_path': ['file/one.txt',

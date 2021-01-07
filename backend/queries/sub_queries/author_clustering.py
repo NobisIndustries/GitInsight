@@ -8,7 +8,7 @@ import db_schema as db
 
 
 class AuthorClustererQuery:
-
+    MIN_COMMITS = 10  # Discard an author if they have less than this number of commits
     COMMIT_SIZE_CUTOFF = 10  # Only use commits at max this number of edited files
     NUMBER_PARENT_DIRS_TO_CONSIDER = 2
     MIN_PARENT_DIR_DEPTH = 2
@@ -54,6 +54,9 @@ class AuthorClustererQuery:
         tokens = []
         commit_counts = []
         for author_name, grouped_df in data.groupby(db.SqlCommitMetadata.author.name):
+            number_author_commits = grouped_df.hash.nunique()
+            if number_author_commits < self.MIN_COMMITS:
+                continue
             author_tokens = set()
             relevant_columns = zip(grouped_df.current_path.tolist(), grouped_df.authored_epoch.tolist())
             for current_path, authored_epoch in relevant_columns:  # Pandas .iterrows() is too slow
@@ -64,7 +67,7 @@ class AuthorClustererQuery:
                 author_tokens.update(paths)
             authors.append(author_name)
             tokens.append(author_tokens)
-            commit_counts.append(grouped_df.hash.nunique())
+            commit_counts.append(number_author_commits)
 
         return authors, tokens, commit_counts
 
