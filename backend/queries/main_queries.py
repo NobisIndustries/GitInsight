@@ -6,6 +6,7 @@ import pandas as pd
 import db_schema as db
 from caching.caching_decorator import cache
 from configs import AuthorInfoConfig
+from helpers.git_helpers import get_repo_branches
 from helpers.path_helpers import REPO_PATH
 from queries.sub_queries.file_operation_queries import FileOperationQueries
 from queries.sub_queries.general_info_queries import GeneralInfoQueries
@@ -64,8 +65,9 @@ class BranchInfoProvider:
     @cache(limit=10)
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
         repo = git.Repo(REPO_PATH)
-        branch = f'origin/{branch}'
-        available_branches = [ref.name for ref in repo.remotes[0].refs]
+        if len(repo.remotes) > 0:
+            branch = f'origin/{branch}'
+        available_branches = get_repo_branches(repo)
         if branch not in available_branches:
             raise ValueError(f'Branch "{branch}" is invalid.')
         return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()

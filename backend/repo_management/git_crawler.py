@@ -14,6 +14,7 @@ from sqlalchemy.exc import OperationalError
 import db_schema as db
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawl_items import Commit
+from helpers.git_helpers import get_repo_branches
 
 
 class CurrentFilesInfoCollector:
@@ -122,6 +123,8 @@ class CommitCrawlerState:
 
 class CommitCrawler:
 
+    CLEAN_BRANCH_NAME_REGEX = re.compile(r'^origin\/')
+
     def __init__(self, repo_path: Path, commit_provider: CommitProvider):
         self._repo_path = Path(repo_path)
         self._commit_provider = commit_provider
@@ -191,22 +194,17 @@ class CommitCrawler:
         minTimestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
                         if limit_tracked_branches_days_last_activity else 0)
         commit_hash_of_branch = {}
-        for branch in self.__get_repo_branches():
+        for branch in get_repo_branches(self._repo):
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"').strip()
             commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
             if commit_metadata.authored_timestamp >= minTimestamp:
                 commit_hash_of_branch[commit_hash] = self.__clean_origin_branch_name(branch)
         return commit_hash_of_branch
 
-    def __get_repo_branches(self):
-        if len(self._repo.remotes) > 0:
-            return [ref.name for ref in self._repo.remotes[0].refs]
-        return [branch.name for branch in self._repo.branches]
-
     def __clean_origin_branch_name(self, branch_name):
         # We use the branches available from the origin remote repo, but want to present them
         # as "master" instead of "origin/master"
-        return branch_name.split('/')[-1]
+        return self.CLEAN_BRANCH_NAME_REGEX.sub('', branch_name)
 
     def __extract_child_tree(self, all_hashes):
         self._commits_total = len(all_hashes)
