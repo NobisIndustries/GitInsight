@@ -52,7 +52,7 @@ export const overview_store = {
             const branch = context.rootState.common.current_branch;
             let url = `${API_BASE_PATH}/overview/count_and_team_of_dirs/${btoa(branch)}`;
             let request = axios.get(url, {params: {last_days: context.state.last_days}}).then(response => {
-                context.commit('set_count_and_team_of_dirs_data', JSON.parse(response.data));
+                context.commit('set_count_and_team_of_dirs_data', response.data);
                 context.commit('set_count_and_team_is_loading', false);
             });
             return request;
@@ -63,7 +63,7 @@ export const overview_store = {
             const branch = context.rootState.common.current_branch;
             let url = `${API_BASE_PATH}/overview/loc_vs_edit_counts/${btoa(branch)}`;
             let request = axios.get(url, {params: {last_days: context.state.last_days}}).then(response => {
-                context.commit('set_loc_vs_edit_counts_data', JSON.parse(response.data));
+                context.commit('set_loc_vs_edit_counts_data', response.data);
                 context.commit('set_loc_vs_edit_counts_is_loading', false);
             });
             return request;

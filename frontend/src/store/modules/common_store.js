@@ -28,7 +28,7 @@ export const common_store = {
     actions: {
         load_branches(context) {
             let request = axios.get(`${API_BASE_PATH}/entries/availableBranches`).then(response => {
-                context.commit('set_available_branches', JSON.parse(response.data));
+                context.commit('set_available_branches', response.data);
             });
             return request;
         },

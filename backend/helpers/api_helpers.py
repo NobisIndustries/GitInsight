@@ -2,11 +2,6 @@ import base64
 from typing import Union
 
 
-def deescape_forward_slashes(json: str) -> str:
-    # Pandas to_json always escapes / with \/. We don't want that.
-    return json.replace('\\/', '/')
-
-
 def b64encode(value: Union[str, bytes], as_string=True) -> Union[str, bytes]:
     value = value.encode('utf-8') if isinstance(value, str) else value
     encoded = base64.b64encode(value)
