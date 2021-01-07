@@ -24,7 +24,7 @@
             <div class="settings-block">
               <v-progress-linear
                   :value="$store.state.config.crawl_status.percentage"
-                  :color="$store.state.config.crawl_status.is_crawling ? 'accent' : 'grey lighten-1'"
+                  :color="$store.state.config.crawl_status.is_crawling ? 'primary' : 'grey lighten-1'"
               ></v-progress-linear>
               <div
                   class="message-text"
@@ -121,7 +121,7 @@
 }
 
 .message-text-active {
-  color: var(--v-accent-base);
+  color: var(--v-primary-base);
   opacity: 1;
 }
 </style>
