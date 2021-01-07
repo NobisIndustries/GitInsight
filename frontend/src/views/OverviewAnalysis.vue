@@ -19,7 +19,10 @@
         </v-col>
       </v-row>
       <v-row justify="center">
-        <v-col cols="12" lg="10">
+        <v-col cols="12" md="6">
+          <AuthorClustersPlot />
+        </v-col>
+        <v-col cols="12" md="6">
           <LocVsEditCountsPlot/>
         </v-col>
       </v-row>
@@ -32,10 +35,11 @@ import BranchSelector from "@/components/detailAnalysisComponents/BranchSelector
 import DaysSelector from "@/components/commonComponents/DaysSelector";
 import OverviewTreeMap from "@/components/overviewComponents/treeMap/OverviewTreeMap";
 import LocVsEditCountsPlot from "@/components/overviewComponents/locVsEditCountsPlot/LocVsEditCountsPlot";
+import AuthorClustersPlot from "@/components/overviewComponents/authorClustersPlot/AuthorClustersPlot";
 
 export default {
   name: "OverviewAnalysis",
-  components: {LocVsEditCountsPlot, OverviewTreeMap, DaysSelector, BranchSelector},
+  components: {AuthorClustersPlot, LocVsEditCountsPlot, OverviewTreeMap, DaysSelector, BranchSelector},
   data() {
     return {};
   },
@@ -43,6 +47,7 @@ export default {
     load_data() {
       this.$store.dispatch('load_count_and_team_of_dirs');
       this.$store.dispatch('load_loc_vs_edit_counts');
+      this.$store.dispatch('load_author_clusters');
     },
     set_last_days(last_days) {
       this.$store.commit('set_last_days', last_days);

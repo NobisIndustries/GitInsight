@@ -1,5 +1,6 @@
 name: GitInsight
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - pip
@@ -7,6 +8,8 @@ dependencies:
   - gitpython
   - pandas
   - sqlalchemy
+  - scikit-learn
+  - umap-learn
   - pip:
     - bidict
     - fastapi
