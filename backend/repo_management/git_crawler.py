@@ -113,7 +113,6 @@ class CommitProvider:
 
 class CommitCrawlerState:
     IDLE = 'IDLE'
-    CLONE_REPO = 'CLONE_REPO'
     UPDATE_REPO = 'UPDATE_REPO'
     GET_PREVIOUS_COMMITS = 'GET_PREVIOUS_COMMITS'
     EXTRACT_COMMITS = 'EXTRACT_COMMITS'

@@ -20,10 +20,6 @@ export const config_store = {
         calculate_crawl_progress(state, status) {
             state.crawl_status.is_crawling = true;
             switch (status.current_operation) {
-                case 'CLONE_REPO':
-                    state.crawl_status.percentage = 0;
-                    state.crawl_status.status_message = 'Clone repo for first usage...';
-                    break;
                 case 'UPDATE_REPO':
                     state.crawl_status.percentage = 10;
                     state.crawl_status.status_message = 'Updating to newest repo version...';
