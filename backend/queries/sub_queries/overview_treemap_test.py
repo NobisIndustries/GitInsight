@@ -3,11 +3,11 @@ from unittest.mock import Mock
 
 import pandas as pd
 
-from queries.sub_queries.repo_overview_queries import OverviewTreeElement, RepoOverviewQueries
+from queries.sub_queries.overview_treemap import OverviewTreemapQuery, OverviewTreeElement
 
 
 class RepoOverviewQueriesTest(unittest.TestCase):
-    def __create_testable_queries_instance(self):
+    def __create_testable_query_instance(self):
         branch_info_provider_mock = Mock()
         branch_info_provider_mock.filter_for_commits_in_branch = lambda data, branch: data
 
@@ -21,7 +21,7 @@ class RepoOverviewQueriesTest(unittest.TestCase):
         author_info_provider_mock.add_info_to_author_names.return_value = team_info
         author_info_provider_mock.get_all_teams_data.return_value = team_info
 
-        queries = RepoOverviewQueries(None, branch_info_provider_mock, author_info_provider_mock)
+        queries = OverviewTreemapQuery(None, author_info_provider_mock, branch_info_provider_mock)
 
         query_data = pd.DataFrame({
             'author': ['Aquaman', 'Batman', 'Batman', 'Aquaman'],
@@ -29,13 +29,13 @@ class RepoOverviewQueriesTest(unittest.TestCase):
             'authored_timestamp': [10, 20, 30, 40],
             'number_affected_files': [4, 3, 2, 1]
         })
-        queries._query_count_and_teams_data = Mock(return_value=query_data)
+        queries._get_data = Mock(return_value=query_data)
         return queries
 
     def test_calculate_count_and_best_team_of_dir(self):
-        queries = self.__create_testable_queries_instance()
+        query = self.__create_testable_query_instance()
 
-        result = queries.calculate_count_and_best_team_of_dir('master', max_depth=1, last_days=None)
+        result = query.calculate('master', max_depth=1, last_days=None)
 
         expected = {
             'edit_count': [2, 4],

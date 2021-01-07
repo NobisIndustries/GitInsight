@@ -8,9 +8,6 @@ from caching.caching_decorator import cache
 from configs import AuthorInfoConfig
 from helpers.git_helpers import get_repo_branches
 from helpers.path_helpers import REPO_PATH
-from queries.sub_queries.file_operation_queries import FileOperationQueries
-from queries.sub_queries.general_info_queries import GeneralInfoQueries
-from queries.sub_queries.repo_overview_queries import RepoOverviewQueries
 
 
 class AuthorInfoProvider:
@@ -71,24 +68,3 @@ class BranchInfoProvider:
         if branch not in available_branches:
             raise ValueError(f'Branch "{branch}" is invalid.')
         return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
-
-
-class Queries:
-    def __init__(self):
-        db_session = db.get_session()
-        author_info_provider = AuthorInfoProvider()
-        branch_info_provider = BranchInfoProvider()
-
-        self.general_info = GeneralInfoQueries(db_session)
-        self.file_operations = FileOperationQueries(db_session, branch_info_provider, author_info_provider)
-        self.overview = RepoOverviewQueries(db_session, branch_info_provider, author_info_provider)
-
-
-if __name__ == '__main__':
-    q = Queries()
-    # print(q.general_info.get_all_authors())
-    # print(q.general_info.get_all_branches())
-    # print(q.general_info.get_all_paths_in_branch('master'))
-    print(q.file_operations.get_history_of_path('Python/', 'master'))
-    # print(q.overview.calculate_count_and_best_team_of_dir('master'))
-    print(q.overview.calculate_loc_vs_edit_counts('master'))

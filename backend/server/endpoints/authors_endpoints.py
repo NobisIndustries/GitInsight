@@ -1,20 +1,19 @@
 from fastapi import APIRouter
 
+import db_schema
 from caching.caching_decorator import reset_cache
 from configs import AuthorInfoConfig
-from queries.main_queries import AuthorInfoProvider
+from queries.info_providers import AuthorInfoProvider
+from queries.sub_queries.general_info import GeneralInfoQueries
 
 router = APIRouter()
 
-queries = None
-def set_queries(queries_instance):
-    global queries
-    queries = queries_instance
+general_info_queries = GeneralInfoQueries(db_schema.get_session())
 
 
 @router.get('/info')
 async def get_author_info():
-    all_authors = queries.general_info.get_all_authors()
+    all_authors = general_info_queries.get_all_authors()
     authors_default = {author: AuthorInfoProvider.UNKNOWN_PERSON_INFO for author in all_authors}
 
     config = AuthorInfoConfig.load()

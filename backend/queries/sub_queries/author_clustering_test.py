@@ -2,12 +2,12 @@ import unittest
 
 import pandas as pd
 
-from queries.sub_queries.author_clustering import AuthorClusterer
+from queries.sub_queries.author_clustering import AuthorClustererQuery
 
 
 class AuthorClusteringTest(unittest.TestCase):
     def test_tokenize(self):
-        clusterer = AuthorClusterer(None, None, None)
+        clusterer = AuthorClustererQuery(None, None, None)
 
         data = pd.DataFrame({
             'current_path': ['file/one.txt',
@@ -34,7 +34,7 @@ class AuthorClusteringTest(unittest.TestCase):
         self.assertEqual(expected_commit_counts, commit_counts)
 
     def test_get_sub_path_variations(self):
-        clusterer = AuthorClusterer(None, None, None)
+        clusterer = AuthorClustererQuery(None, None, None)
         paths = ['top_level.txt',
                  'one/dir.md',
                  'and/two/dirs.js',

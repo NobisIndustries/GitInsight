@@ -5,22 +5,22 @@ import umap
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import db_schema as db
-from queries.main_queries import AuthorInfoProvider, BranchInfoProvider
 
 
-class AuthorClusterer:
+class AuthorClustererQuery:
+
     COMMIT_SIZE_CUTOFF = 10  # Only use commits at max this number of edited files
     NUMBER_PARENT_DIRS_TO_CONSIDER = 2
     MIN_PARENT_DIR_DEPTH = 2
 
     REGEX_ALL_EXCEPT_WHITESPACE = r'(\S+)'
 
-    def __init__(self, db_session, branch_info_provider, author_info_provider):
+    def __init__(self, db_session, author_info_provider, branch_info_provider):
         self._session = db_session
-        self._branch_info_provider = branch_info_provider
         self._author_info_provider = author_info_provider
+        self._branch_info_provider = branch_info_provider
 
-    def cluster(self, branch: str, last_days=None):
+    def calculate(self, branch: str, last_days=None):
         data = self.__get_data(branch, last_days)
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
         if data.empty:
@@ -110,8 +110,7 @@ class AuthorClusterer:
 
 
 if __name__ == '__main__':
-    db_session = db.get_session()
-    author_info_provider = AuthorInfoProvider()
-    branch_info_provider = BranchInfoProvider()
+    from queries.helpers import get_common_query_init_arguments
+    init_arguments = get_common_query_init_arguments()
 
-    print(AuthorClusterer(db_session, branch_info_provider, author_info_provider).cluster('master'))
+    print(AuthorClustererQuery(*init_arguments).calculate('master'))

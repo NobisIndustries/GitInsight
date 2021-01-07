@@ -3,11 +3,11 @@ import pandas as pd
 import db_schema as db
 
 
-class FileOperationQueries:
-    def __init__(self, db_session, branch_info_provider, author_info_provider):
+class ItemHistoryQuery:
+    def __init__(self, db_session, author_info_provider, branch_info_provider):
         self._session = db_session
-        self._branch_info_provider = branch_info_provider
         self._author_info_provider = author_info_provider
+        self._branch_info_provider = branch_info_provider
 
     def get_history_of_path(self, file_path: str, branch: str) -> pd.DataFrame:
         relevant_files_query = self._session.query(db.SqlCurrentFileInfo.file_id, db.SqlCurrentFileInfo.current_path) \

@@ -1,25 +1,27 @@
 from fastapi import APIRouter
 
 from helpers.api_helpers import b64decode
+from queries.helpers import get_common_query_init_arguments
+from queries.sub_queries.general_info import GeneralInfoQueries
+from queries.sub_queries.item_history import ItemHistoryQuery
 
 router = APIRouter()
 
-queries = None
-def set_queries(queries_instance):
-    global queries
-    queries = queries_instance
+db_session, author_info_provider, branch_info_provider = get_common_query_init_arguments()
+general_info_queries = GeneralInfoQueries(db_session)
+item_history_query = ItemHistoryQuery(db_session, author_info_provider, branch_info_provider)
 
 
 @router.get('/availableBranches')
 async def get_available_branches():
-    data = queries.general_info.get_all_branches()
+    data = general_info_queries.get_all_branches()
     return list(data)
 
 
 @router.get('/availableEntries/{branch_base64}')
 async def get_available_entries(branch_base64: str):
     branch = b64decode(branch_base64)
-    data = queries.general_info.get_all_paths_in_branch(branch)
+    data = general_info_queries.get_all_paths_in_branch(branch)
     return list(data)
 
 

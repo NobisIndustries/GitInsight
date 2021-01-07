@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from queries.main_queries import Queries
 from server.endpoints import crawl_endpoints, entries_endpoints, overview_endpoints, authors_endpoints, \
     description_endpoints
 
@@ -19,11 +18,6 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
-
-queries = Queries()
-authors_endpoints.set_queries(queries)
-entries_endpoints.set_queries(queries)
-overview_endpoints.set_queries(queries)
 
 app.include_router(crawl_endpoints.router, prefix=f'{COMMON_API_PREFIX}/crawl', tags=['crawl'])
 app.include_router(authors_endpoints.router, prefix=f'{COMMON_API_PREFIX}/authors', tags=['authors'])
