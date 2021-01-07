@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from helpers.api_helpers import b64decode
 from queries.helpers import get_common_query_init_arguments
+from queries.info_providers import LineCountProvider
 from queries.sub_queries.author_clustering import AuthorClustererQuery
 from queries.sub_queries.loc_vs_edit_count import LocVsEditCountQuery
 from queries.sub_queries.overview_treemap import OverviewTreemapQuery
@@ -11,7 +12,7 @@ router = APIRouter()
 db_session, author_info_provider, branch_info_provider = get_common_query_init_arguments()
 
 treemap_overview = OverviewTreemapQuery(db_session, author_info_provider, branch_info_provider)
-loc_vs_entry_count = LocVsEditCountQuery(db_session, author_info_provider, branch_info_provider)
+loc_vs_entry_count = LocVsEditCountQuery(db_session, branch_info_provider, LineCountProvider())
 author_clusterer = AuthorClustererQuery(db_session, author_info_provider, branch_info_provider)
 
 

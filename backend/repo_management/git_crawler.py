@@ -20,42 +20,19 @@ from helpers.git_helpers import get_repo_branches
 class CurrentFilesInfoCollector:
     """Calculates and tracks the line count of all files in the given branches."""
 
-    MAGIC_EMPTY_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'  # See https://stackoverflow.com/a/40884093
-    EXTRACT_NUMBER_AT_START_REGEX = re.compile(r'^(\d+)')
-    EntryInfo = namedtuple('EntryInfo', ['id', 'path', 'line_count'])
+    EntryInfo = namedtuple('EntryInfo', ['id', 'path'])
 
     def __init__(self, repo: git.Repo):
         self._repo = repo
         self._file_infos_of_branch = {}
 
-    def add_branch_info(self, branch, branch_head_hash, current_paths_of_branch):
-        line_counts_of_files = self._parse_current_line_counts(branch_head_hash)
+    def add_branch_info(self, branch, current_paths_of_branch):
         file_infos = []
         for file_id, file_path in current_paths_of_branch.items():
-            file_info = self.EntryInfo(file_id, file_path, line_counts_of_files.get(file_path, None))
+            file_info = self.EntryInfo(file_id, file_path)
             file_infos.append(file_info)
 
         self._file_infos_of_branch[branch] = file_infos
-
-    def _parse_current_line_counts(self, commit_hash):
-        raw_text = self._repo.git.execute(f'git diff --stat {self.MAGIC_EMPTY_HASH} {commit_hash}')
-        line_counts_of_files = {}
-        for raw_line in raw_text.splitlines():
-            file_path, line_count = self._parse_single_git_line_count_line(raw_line)
-            if file_path is not None:
-                line_counts_of_files[file_path] = line_count
-        return line_counts_of_files
-
-    def _parse_single_git_line_count_line(self, line: str):
-        # Schema:  myDir/subDir/myFile.txt         |    39 +
-        parts = line.split('|')
-        if len(parts) != 2:
-            return None, None
-        file_path = parts[0].strip()
-        line_count_match = re.findall(self.EXTRACT_NUMBER_AT_START_REGEX, parts[1].strip())
-        if not line_count_match:  # At binary entries like: picture.jpg    | Bin 0 -> 27063 bytes
-            return None, None
-        return file_path, int(line_count_match[0])
 
     def add_to_db(self, db_session):
         for branch, file_infos in self._file_infos_of_branch.items():
@@ -64,7 +41,6 @@ class CurrentFilesInfoCollector:
                     branch=branch,
                     file_id=file_info.id,
                     current_path=file_info.path,
-                    line_count=file_info.line_count
                 )
                 db_session.add(sql_entry)
 
@@ -267,7 +243,7 @@ class CommitCrawler:
         child_commit_hash = child_commit.hash
         if child_commit_hash in self._latest_hashes:
             branch_name = self._latest_hashes[child_commit_hash]
-            files_info_collector.add_branch_info(branch_name, child_commit_hash, dict(branch_file_paths))
+            files_info_collector.add_branch_info(branch_name, dict(branch_file_paths))
         return child_commit_hash
 
     def _get_unique_id(self):
