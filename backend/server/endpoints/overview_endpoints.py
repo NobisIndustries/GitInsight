@@ -42,4 +42,6 @@ async def get_author_clusters(branch_base64: str, last_days=None):
     if last_days:
         last_days = int(last_days)
     data = author_clusterer.calculate(branch, last_days)
+    if data is None:
+        return None
     return data.to_dict(orient='records')
