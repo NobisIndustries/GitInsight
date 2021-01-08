@@ -10,38 +10,41 @@
                  frequency can increase in outer layers where the bulk of new feature development happens.</p>"
   >
     <v-col align="center">
-      <div class="card-heading">Lines of Code vs Edit Count</div>
-      <v-autocomplete
-          v-model="selected_file_types"
-          :items="available_file_types"
-          item-text="file_type"
-          item-value="file_type"
-          label="Filter file types"
-          chips
-          multiple
-          clearable
-          deletable-chips
-          small-chips
-          class="max-width-input"
-      >
-        <template v-slot:item="{ item }">
-          <v-list-item-content>
-            <v-list-item-title v-text="item.file_type"></v-list-item-title>
-            <v-list-item-subtitle >{{ item.file_count }} {{item.file_count > 1 ? 'files':'file'}}</v-list-item-subtitle>
-          </v-list-item-content>
-        </template>
-      </v-autocomplete>
-      <v-skeleton-loader
-          v-show="$store.state.overview.loc_vs_edict_counts_is_loading"
-          type="image"
-          class="ma-5"
-      ></v-skeleton-loader>
-      <Plotly
-          v-show="!$store.state.overview.loc_vs_edict_counts_is_loading & $store.state.overview.loc_vs_edict_counts_data !== null"
-          :data="plot_data"
-          :layout="plot_layout"
-          :display-mode-bar="false"
-      ></Plotly>
+      <div class="card-heading">Edits and Line Counts</div>
+        <v-skeleton-loader
+            v-show="is_loading"
+            type="image"
+            class="ma-5"
+        ></v-skeleton-loader>
+      <div v-show="!is_loading & !has_data">No data found.</div>
+      <div v-show="!is_loading & has_data">
+        <v-autocomplete
+            v-model="selected_file_types"
+            :items="available_file_types"
+            item-text="file_type"
+            item-value="file_type"
+            label="Filter file types"
+            chips
+            multiple
+            clearable
+            deletable-chips
+            small-chips
+            class="max-width-input"
+        >
+          <template v-slot:item="{ item }">
+            <v-list-item-content>
+              <v-list-item-title v-text="item.file_type"></v-list-item-title>
+              <v-list-item-subtitle>{{ item.file_count }} {{ item.file_count > 1 ? 'files' : 'file' }}
+              </v-list-item-subtitle>
+            </v-list-item-content>
+          </template>
+        </v-autocomplete>
+        <Plotly
+            :data="plot_data"
+            :layout="plot_layout"
+            :display-mode-bar="false"
+        ></Plotly>
+      </div>
     </v-col>
   </CardWithHelp>
 </template>
@@ -129,11 +132,17 @@ export default {
       }
 
       let file_types_by_number = [];
-      for(let file_type in file_extension_counts)
+      for (let file_type in file_extension_counts)
         file_types_by_number.push({file_type: file_type, file_count: file_extension_counts[file_type]});
 
       file_types_by_number.sort((a, b) => b.file_count - a.file_count);
       return file_types_by_number;
+    },
+    is_loading() {
+      return this.$store.state.overview.loc_vs_edict_counts_is_loading;
+    },
+    has_data() {
+      return this.$store.state.overview.loc_vs_edict_counts_data !== null;
     }
   }
 }

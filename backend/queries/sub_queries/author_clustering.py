@@ -34,6 +34,8 @@ class AuthorClustererQuery:
 
         authors, tokens, commit_counts = self._tokenize(data)
         tokens_text = [' '.join(t) for t in tokens]
+        if not tokens_text:
+            return None
 
         vectorizer = TfidfVectorizer(use_idf=True, lowercase=False, token_pattern=self.REGEX_ALL_EXCEPT_WHITESPACE)
         vectorized = vectorizer.fit_transform(tokens_text)

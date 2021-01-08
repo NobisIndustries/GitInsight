@@ -33,6 +33,8 @@ async def get_loc_vs_edit_counts(branch_base64: str, last_days=None):
     if last_days:
         last_days = int(last_days)
     data = loc_vs_entry_count.calculate(branch, last_days=last_days)
+    if data is None:
+        return None
     return data.to_dict(orient='records')
 
 

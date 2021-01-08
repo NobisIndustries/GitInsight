@@ -13,28 +13,31 @@
   >
     <v-col align="center">
       <div class="card-heading">Repo Overview</div>
-      <PlotBySelector
-          :options="plot_by_options"
-          @change="selected_plot_type = $event"
-      ></PlotBySelector>
-      <v-switch
-          v-model="show_relative_edit_counts"
-          v-show="selected_plot_type === 'counts'"
-          label="Color relative edit counts"
-          class="switch-small"
-          dense
-      ></v-switch>
       <v-skeleton-loader
-          v-show="$store.state.overview.count_and_team_is_loading"
+          v-show="is_loading"
           type="image"
           class="ma-5"
       ></v-skeleton-loader>
-      <Plotly
-          v-show="!$store.state.overview.count_and_team_is_loading & $store.state.overview.count_and_team_of_dirs_data !== null"
-          :data="plot_data"
-          :layout="plot_layout"
-          :display-mode-bar="false"
-      ></Plotly>
+      <div v-show="!is_loading & !has_data">No data found.</div>
+      <div v-show="!is_loading & has_data">
+        <PlotBySelector
+            :options="plot_by_options"
+            @change="selected_plot_type = $event"
+        ></PlotBySelector>
+        <v-switch
+            v-model="show_relative_edit_counts"
+            v-show="selected_plot_type === 'counts'"
+            label="Color relative edit counts"
+            class="switch-small"
+            dense
+        ></v-switch>
+        <Plotly
+            v-show="!$store.state.overview.count_and_team_is_loading & $store.state.overview.count_and_team_of_dirs_data !== null"
+            :data="plot_data"
+            :layout="plot_layout"
+            :display-mode-bar="false"
+        ></Plotly>
+      </div>
     </v-col>
   </CardWithHelp>
 </template>
@@ -109,6 +112,12 @@ export default {
         return get_plot_data_counts(treemap_data, branch, this.show_relative_edit_counts);
       }
     },
+    is_loading() {
+      return this.$store.state.overview.count_and_team_is_loading;
+    },
+    has_data() {
+      return this.$store.state.overview.count_and_team_of_dirs_data !== null;
+    }
   }
 }
 

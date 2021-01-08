@@ -17,6 +17,8 @@ class LocVsEditCountQuery:
     def calculate(self, branch: str, last_days=None):
         data = self._get_data(branch, last_days)
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)
+        if data.empty:
+            return None
 
         current_path_name = db.SqlCurrentFileInfo.current_path.name
         data = data.loc[:, [current_path_name]]

@@ -3,14 +3,15 @@
       help_text="<p>Funky machine learning magic. Use at own risk.</p>"
   >
     <v-col align="center">
-      <div class="card-heading">Author Clusters</div>
+      <div class="card-heading">Similar Authors</div>
       <v-skeleton-loader
-          v-show="$store.state.overview.author_clusters_is_loading"
+          v-show="is_loading"
           type="image"
           class="ma-5"
       ></v-skeleton-loader>
+      <div v-show="!is_loading & !has_data">No data found.</div>
       <Plotly
-          v-show="!$store.state.overview.author_clusters_is_loading & $store.state.overview.author_clusters_data !== null"
+          v-show="!is_loading & has_data"
           :data="plot_data"
           :layout="plot_layout"
           :display-mode-bar="false"
@@ -81,6 +82,12 @@ export default {
       }
       return plot_data;
     },
+    is_loading() {
+      return this.$store.state.overview.author_clusters_is_loading;
+    },
+    has_data() {
+      return this.$store.state.overview.author_clusters_data !== null;
+    }
   },
 }
 
