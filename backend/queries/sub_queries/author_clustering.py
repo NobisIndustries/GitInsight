@@ -5,11 +5,12 @@ import umap
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import db_schema as db
+from caching.caching_decorator import cache
 
 
 class AuthorClustererQuery:
     MIN_COMMITS = 10  # Discard an author if they have less than this number of commits
-    COMMIT_SIZE_CUTOFF = 10  # Only use commits at max this number of edited files
+    COMMIT_SIZE_CUTOFF = 10  # Only use commits with at max this number of edited files
     NUMBER_PARENT_DIRS_TO_CONSIDER = 2
     MIN_PARENT_DIR_DEPTH = 2
 
@@ -20,6 +21,7 @@ class AuthorClustererQuery:
         self._author_info_provider = author_info_provider
         self._branch_info_provider = branch_info_provider
 
+    @cache(limit=20)
     def calculate(self, branch: str, last_days=None):
         data = self.__get_data(branch, last_days)
         data = self._branch_info_provider.filter_for_commits_in_branch(data, branch)

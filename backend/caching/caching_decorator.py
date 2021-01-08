@@ -18,7 +18,7 @@ def __is_class(value):
 def cache(limit=None):
     def decorator(method):
         def inner(*args, **kwargs):
-            category = str(method.__name__)
+            category = f'{method.__module__}.{method.__name__}'
             args_to_hash = list(args)
             if len(args_to_hash) > 0 and __is_class(args_to_hash[0]):
                 args_to_hash.pop(0)  # Filter out the self argument of methods
