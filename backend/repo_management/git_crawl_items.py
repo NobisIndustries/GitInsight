@@ -1,6 +1,7 @@
 import pprint
 from pathlib import PurePath
 from typing import List
+from uuid import uuid4
 
 import git
 
@@ -141,9 +142,13 @@ class CommitAffectedFile:
         self.file_id = file_id
 
     def to_db_representation(self, hash):
+        # There are sometimes commits that are not reachable anymore. Why? No idea. But our database wants a
+        # unique combination of commit has and file id, so we have to insert some dummy id
+        file_id = self.file_id if self.file_id else f'ORPHANED-{uuid4()}'
+
         return db.SqlAffectedFile(
             hash=hash,
-            file_id=self.file_id,
+            file_id=file_id,
             old_path=self.old_path,
             new_path=self.new_path,
             change_type=self.change_type

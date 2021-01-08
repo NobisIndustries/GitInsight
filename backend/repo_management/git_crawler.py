@@ -12,9 +12,9 @@ from bidict import bidict
 from sqlalchemy.exc import OperationalError
 
 import db_schema as db
+from helpers.git_helpers import get_repo_branches
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawl_items import Commit
-from helpers.git_helpers import get_repo_branches
 
 
 class CurrentFilesInfoCollector:
@@ -36,13 +36,10 @@ class CurrentFilesInfoCollector:
 
     def add_to_db(self, db_session):
         for branch, file_infos in self._file_infos_of_branch.items():
-            for file_info in file_infos:
-                sql_entry = db.SqlCurrentFileInfo(
-                    branch=branch,
-                    file_id=file_info.id,
-                    current_path=file_info.path,
-                )
-                db_session.add(sql_entry)
+            sql_entries = [db.SqlCurrentFileInfo(branch=branch, file_id=file_info.id, current_path=file_info.path)
+                           for file_info in file_infos]
+            db_session.bulk_save_objects(sql_entries)
+            db_session.commit()
 
     def __repr__(self):
         return pprint.pformat(self._file_infos_of_branch)
@@ -253,6 +250,7 @@ class CommitCrawler:
         if self._repo:
             self._repo.__del__()
 
+
 class CrawlResult:
     def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
         self.child_commit_tree = child_commit_tree
@@ -266,13 +264,15 @@ class CrawlResult:
         db.create_tables()
 
         db_session = db.get_session()
-        for commits in self.child_commit_tree.values():
+        for i, commits in enumerate(self.child_commit_tree.values()):
             for commit in commits:
                 commit.add_to_db(db_session)
+            if (i + 1) % 2000 == 0:
+                db_session.commit()
+        db_session.commit()
 
         self.current_info_of_branches.add_to_db(db_session)
 
-        db_session.commit()
 
 
 if __name__ == '__main__':
