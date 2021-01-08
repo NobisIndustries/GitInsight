@@ -143,7 +143,7 @@ function get_plot_data_counts(treemap_data, branch, color_relative) {
   const colorbar_title = color_relative ? 'Fraction of all<br>edits in parent dir' : 'Total edits'
   return [{
     type: 'treemap',
-    maxdepth: 3,
+    maxdepth: color_relative ? 2 : 3,
     labels: treemap_data.toArray('dir_path'),
     parents: treemap_data.toArray('parent_element'),
     values: treemap_data.toArray(value_column),
