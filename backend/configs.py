@@ -6,6 +6,7 @@ from pydantic.main import BaseModel
 
 from helpers.path_helpers import CONFIG_DIR
 from helpers.security_helpers import get_random_token
+from server.endpoints.auth_data_models import UserInternal, create_default_user
 
 
 class JsonBaseConfig(BaseModel):
@@ -91,3 +92,15 @@ class ProjectDescriptionConfig(JsonBaseConfig):
                             'them](/config/authors_and_teams). You can also configure when and how GitInsight [updates '
                             'its database](/config/db_update) with new changes. Lastly you can also edit the repo '
                             'title and this text to better tailor this application to your visitors.')
+
+
+class Authentication(JsonBaseConfig):
+    # You could (and probably should) do user management with a database instead, but for the time being
+    # this must do.
+    @classmethod
+    def _get_config_path(cls):
+        return 'users.json'
+
+    jwt_secret: str = ''
+    jwt_expires_in_min: int = 30
+    users: Dict[str, UserInternal] = create_default_user()

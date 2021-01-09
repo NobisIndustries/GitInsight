@@ -1,8 +1,9 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.endpoints import crawl_endpoints, entries_endpoints, overview_endpoints, authors_endpoints, \
-    description_endpoints
+    description_endpoints, auth_endpoints
 
 COMMON_API_PREFIX = '/api'
 
@@ -24,3 +25,4 @@ app.include_router(authors_endpoints.router, prefix=f'{COMMON_API_PREFIX}/author
 app.include_router(entries_endpoints.router, prefix=f'{COMMON_API_PREFIX}/entries', tags=['entries'])
 app.include_router(overview_endpoints.router, prefix=f'{COMMON_API_PREFIX}/overview', tags=['overview'])
 app.include_router(description_endpoints.router, prefix=f'{COMMON_API_PREFIX}/descriptions', tags=['descriptions'])
+app.include_router(auth_endpoints.router, prefix=f'{COMMON_API_PREFIX}/auth', tags=['auth'])

@@ -16,4 +16,6 @@ dependencies:
     - uvicorn
     - -ftfy
     - crontab
-
+    - python-jose[cryptography]
+    - passlib[bcrypt]
+    - python-multipart

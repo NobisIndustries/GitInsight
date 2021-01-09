@@ -1,5 +1,5 @@
 import secrets
 
 
-def get_random_token():
-    return secrets.token_urlsafe(32)
+def get_random_token(length=32):
+    return secrets.token_urlsafe(length)

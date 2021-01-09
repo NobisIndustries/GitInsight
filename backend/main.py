@@ -3,6 +3,7 @@ from multiprocessing import Process
 import uvicorn
 
 from constants import MAIN_SERVICE_PORT, CRAWL_SERVICE_PORT, CACHE_SERVICE_PORT
+from server.endpoints.auth_common import init_authentication
 
 
 class Services:
@@ -29,6 +30,7 @@ class ApplicationStarter:
         p.start()
 
     def main(self):
+        init_authentication()
         self.__start_in_process(Services.run_main)
         self.__start_in_process(Services.run_cache)
         self.__start_in_process(Services.run_crawler)
