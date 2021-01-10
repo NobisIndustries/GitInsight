@@ -2,6 +2,7 @@
   <v-select
       v-model="display_permission"
       :items="available_permissions"
+      label="User permissions"
       :disabled="disabled"
   ></v-select>
 </template>

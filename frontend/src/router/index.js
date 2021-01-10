@@ -8,9 +8,9 @@ const router_options = [
   { path: '/user/login', component: 'user/LoginView' },
   { path: '/user/logout', component: 'user/Logout' },
   { path: '/user/change_password', component: 'user/ChangePassword' },
-  { path: '/config/db_update', component: 'config/DatabaseUpdate', meta: { requiresAuth: true } },
-  { path: '/config/authors_and_teams', component: 'config/AuthorsAndTeams', meta: { requiresAuth: true } },
-  { path: '/config/security', component: 'config/Security', meta: { requiresAuth: true } },
+  { path: '/config/db_update', component: 'config/DatabaseUpdate'},
+  { path: '/config/authors_and_teams', component: 'config/AuthorsAndTeams'},
+  { path: '/config/users', component: 'config/Users'},
   { path: '*', component: 'NotFound' }
 ];
 

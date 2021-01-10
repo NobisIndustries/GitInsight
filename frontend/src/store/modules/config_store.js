@@ -14,7 +14,9 @@ export const config_store = {
         crawl_config: {},
 
         authors: {},
-        teams: {}
+        teams: {},
+
+        users: [],
     },
     mutations: {
         calculate_crawl_progress(state, status) {
@@ -55,6 +57,7 @@ export const config_store = {
         set_crawl_config(state, config) {
             state.crawl_config = config;
         },
+
         set_authors(state, authors) {
             state.authors = authors;
         },
@@ -73,8 +76,12 @@ export const config_store = {
             for (let author_name of author_names_to_reset)
                 state.authors[author_name].team_id = UNKNOWN_TEAM_ID;
             Vue.delete(state.teams, team_name);
-        }
+        },
 
+        set_users(state, users) {
+            state.users = users;
+            state.users.sort((a, b) => a.username.toLowerCase().localeCompare(b.username.toLowerCase()));
+        },
     },
 
     actions: {
@@ -95,6 +102,7 @@ export const config_store = {
             });
             return request;
         },
+
         load_author_info(context) {
             let request = axios.get(`${API_BASE_PATH}/authors/info`).then(response => {
                 context.commit('set_teams', response.data['teams']);
@@ -107,6 +115,27 @@ export const config_store = {
             let request = axios.put(`${API_BASE_PATH}/authors/info`, data);
             return request;
         },
+
+        load_users(context) {
+            let request = axios.get(`${API_BASE_PATH}/auth/users`).then(response => {
+                context.commit('set_users', response.data);
+            });
+            return request;
+        },
+        add_user(context, {username, new_password, permissions}) {
+            const data = {password: new_password, permissions: permissions};
+            let request = axios.post(`${API_BASE_PATH}/auth/users/${username}`, data);
+            return request;
+        },
+        update_user(context, {username, new_password, permissions}) {
+            const data = {password: new_password, permissions: permissions};
+            let request = axios.put(`${API_BASE_PATH}/auth/users/${username}`, data);
+            return request;
+        },
+        delete_user(context, username) {
+            let request = axios.delete(`${API_BASE_PATH}/auth/users/${username}`);
+            return request;
+        }
     },
 };
 

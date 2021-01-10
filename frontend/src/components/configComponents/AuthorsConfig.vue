@@ -7,7 +7,7 @@
           @input="author_page = 1"
           clearable
           outlined
-          class="mr-5"
+          class="mr-5 mt-2"
       ></v-text-field>
       <v-switch
           v-model="only_unknown_filter"
