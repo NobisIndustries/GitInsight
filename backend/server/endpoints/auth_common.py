@@ -6,12 +6,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from configs import Authentication
-from helpers.security_helpers import get_random_token
 from server.endpoints.auth_data_models import GUEST_USERNAME, UserExternal
 
 auth_data = Authentication.load()
 JWT_SECRET_KEY = auth_data.jwt_secret
-JWT_EXPIRE_MINUTES = auth_data.jwt_expires_in_min
+JWT_EXPIRE_DAYS = auth_data.jwt_expires_in_days
 JWT_ALGORITHM = 'HS256'
 del auth_data
 
@@ -20,13 +19,12 @@ pwd_context = CryptContext(schemes=['bcrypt'])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/auth/token')
 
 
-def hash_password(password, salt):
-    return pwd_context.hash(f'{salt}{password}')
+def hash_password(password):
+    return pwd_context.hash(password)
 
 
-def __verify_password(password, user_data_internal):
-    hashed_password = hash_password(password, user_data_internal.authentication.salt)
-    return hashed_password == user_data_internal.authentication.hashed_password
+def __verify_password(plain_password, user_data_internal):
+    return pwd_context.verify(plain_password, user_data_internal.authentication.hashed_password)
 
 
 def __get_user_data_internal(username):
@@ -44,7 +42,7 @@ def authenticate_user(username: str, password: str) -> UserExternal:
 
 
 def create_access_token(data: dict):
-    timedelta(minutes=JWT_EXPIRE_MINUTES)
+    timedelta(days=JWT_EXPIRE_DAYS)
     return jwt.encode(data, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 
@@ -86,10 +84,3 @@ def user_can_edit_all(current_user: UserExternal = Depends(get_current_user_exte
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Missing permission to edit all')
     return True
-
-
-def init_authentication():
-    users = Authentication.load()
-    if not users.jwt_secret:
-        users.jwt_secret = get_random_token()
-        users.save_file()

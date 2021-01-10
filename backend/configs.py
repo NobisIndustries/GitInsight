@@ -6,7 +6,7 @@ from pydantic.main import BaseModel
 
 from helpers.path_helpers import CONFIG_DIR
 from helpers.security_helpers import get_random_token
-from server.endpoints.auth_data_models import UserInternal, create_default_user
+from server.endpoints.auth_data_models import UserInternal
 
 
 class JsonBaseConfig(BaseModel):
@@ -102,5 +102,5 @@ class Authentication(JsonBaseConfig):
         return 'users.json'
 
     jwt_secret: str = ''
-    jwt_expires_in_min: int = 30
-    users: Dict[str, UserInternal] = create_default_user()
+    jwt_expires_in_days: int = 14
+    users: Dict[str, UserInternal] = {}

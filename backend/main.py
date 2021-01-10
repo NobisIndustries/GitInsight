@@ -3,7 +3,7 @@ from multiprocessing import Process
 import uvicorn
 
 from constants import MAIN_SERVICE_PORT, CRAWL_SERVICE_PORT, CACHE_SERVICE_PORT
-from server.endpoints.auth_common import init_authentication
+from server.endpoints.auth_endpoints import init_authentication
 
 
 class Services:
