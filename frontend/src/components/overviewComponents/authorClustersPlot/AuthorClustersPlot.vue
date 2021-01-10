@@ -18,29 +18,30 @@
           class="ma-5"
       ></v-skeleton-loader>
       <div v-show="!is_loading & !has_data">No data found.</div>
-      <Plotly
+      <PlotlyGraph
           v-show="!is_loading & has_data"
           :data="plot_data"
           :layout="plot_layout"
-          :display-mode-bar="false"
-      ></Plotly>
+      ></PlotlyGraph>
     </v-col>
   </CardWithHelp>
 </template>
 
 <script>
-import {Plotly} from 'vue-plotly';
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
+import {PLOTLY_MODE_BAR_BUTTONS_TO_REMOVE} from "@/store/constants";
+import PlotlyGraph from "@/components/commonComponents/PlotlyGraph";
 
 export default {
   name: 'AuthorClustersPlot',
   components: {
+    PlotlyGraph,
     CardWithHelp,
-    Plotly
   },
   data() {
     return {
       selected_file_types: [],
+      mode_bar_buttons_to_remove: PLOTLY_MODE_BAR_BUTTONS_TO_REMOVE,
       plot_layout: {
         hovermode: 'closest',
         xaxis: {
@@ -53,16 +54,11 @@ export default {
           zeroline: false,
           visible: false,
         },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 0,
           b: 0,
           l: 0,
           r: 0
-        },
-        legend: {
-          itemsizing: 'constant',
         },
       },
     };

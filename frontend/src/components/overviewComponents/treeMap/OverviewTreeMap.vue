@@ -31,12 +31,11 @@
             class="switch-small"
             dense
         ></v-switch>
-        <Plotly
+        <PlotlyGraph
             v-show="!$store.state.overview.count_and_team_is_loading & $store.state.overview.count_and_team_of_dirs_data !== null"
             :data="plot_data"
             :layout="plot_layout"
-            :display-mode-bar="false"
-        ></Plotly>
+        ></PlotlyGraph>
       </div>
     </v-col>
   </CardWithHelp>
@@ -53,16 +52,16 @@
 </style>
 
 <script>
-import {Plotly} from 'vue-plotly';
 import PlotBySelector from "@/components/commonComponents/PlotBySelector";
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
+import PlotlyGraph from "@/components/commonComponents/PlotlyGraph";
 
 export default {
   name: 'OverviewTreeMap',
   components: {
+    PlotlyGraph,
     CardWithHelp,
     PlotBySelector,
-    Plotly
   },
   data() {
     return {
@@ -73,8 +72,6 @@ export default {
       selected_plot_type: undefined,
       show_relative_edit_counts: false,
       plot_layout: {
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        paper_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 30,
           b: 10,
@@ -149,10 +146,6 @@ function get_plot_data_counts(treemap_data, branch, color_relative) {
     values: treemap_data.toArray(value_column),
     text: treemap_data.toArray('text'),
     marker: {
-      line: {
-        color: '#ffffff',
-        width: 2
-      },
       colorscale: 'Greens',
       showscale: true,
       reversescale: true,
@@ -177,10 +170,6 @@ function get_plot_data_teams(treemap_data) {
     text: treemap_data.toArray('text'),
     marker: {
       colors: treemap_data.toArray('team_display_color'),
-      line: {
-        color: '#ffffff',
-        width: 2
-      }
     }
   }];
 }

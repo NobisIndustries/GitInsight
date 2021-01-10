@@ -14,12 +14,11 @@
           class="ma-5"
       ></v-skeleton-loader>
       <div class="plot-max-width">
-        <Plotly
+        <PlotlyGraph
             v-show="!$store.state.entry_details.history_is_loading"
             :data="plot_data"
             :layout="plot_layout"
-            :display-mode-bar="false"
-        ></Plotly>
+        ></PlotlyGraph>
       </div>
     </v-col>
   </CardWithHelp>
@@ -32,14 +31,14 @@
 </style>
 
 <script>
-import {Plotly} from 'vue-plotly';
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
+import PlotlyGraph from "@/components/commonComponents/PlotlyGraph";
 
 export default {
   name: 'OwnershipPlot',
   components: {
+    PlotlyGraph,
     CardWithHelp,
-    Plotly
   },
   data() {
     return {
@@ -51,8 +50,6 @@ export default {
           l: 10,
           r: 10
         },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
         grid: {rows: 1, columns: 2},
         legend: {
           orientation: 'h'

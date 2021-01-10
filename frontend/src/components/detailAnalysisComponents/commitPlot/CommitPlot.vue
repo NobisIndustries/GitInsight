@@ -21,28 +21,27 @@
           type="image"
           class="ma-5"
       ></v-skeleton-loader>
-      <Plotly
+      <PlotlyGraph
           v-show="!$store.state.entry_details.history_is_loading"
           :data="plot_data"
           :layout="plot_layout"
-          :display-mode-bar="false"
           @click="select_commit($event)"
-      ></Plotly>
+      ></PlotlyGraph>
     </v-col>
   </CardWithHelp>
 </template>
 
 <script>
-import {Plotly} from 'vue-plotly';
 import PlotBySelector from "@/components/commonComponents/PlotBySelector";
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
+import PlotlyGraph from "@/components/commonComponents/PlotlyGraph";
 
 export default {
   name: 'CommitPlot',
   components: {
+    PlotlyGraph,
     CardWithHelp,
     PlotBySelector,
-    Plotly
   },
   data() {
     return {
@@ -54,18 +53,12 @@ export default {
       ],
       clicked_commit_info: null,
       plot_layout: {
-        hovermode: 'closest',
         yaxis: {
           automargin: true,
         },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
         margin: {
           t: 10,
           b: 30
-        },
-        legend: {
-          itemsizing: 'constant',
         },
       }
     };
