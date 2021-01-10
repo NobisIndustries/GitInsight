@@ -90,7 +90,8 @@ class ProjectDescriptionConfig(JsonBaseConfig):
                             '## What to do next?\n\n'
                             'You should first [create teams and assign contributors to '
                             'them](/config/authors_and_teams). You can also configure when and how GitInsight [updates '
-                            'its database](/config/db_update) with new changes. Lastly you can also edit the repo '
+                            'its database](/config/db_update) with new changes. For better access control, create '
+                            'accounts for your users [here](/config/users). Lastly you can also edit the repo '
                             'title and this text to better tailor this application to your visitors.')
 
 
