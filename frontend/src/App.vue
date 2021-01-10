@@ -33,7 +33,7 @@ export default {
           title: 'Configuration', icon: 'mdi-cog', icon_only: true, show: true, children: [
             {title: 'Database Update', path: '/config/db_update', show: auth.edit_all},
             {title: 'Authors and Teams', path: '/config/authors_and_teams', show: auth.edit_contributors},
-            {title: 'Security', path: '/config/security', show: auth.edit_all},
+            {title: 'Users', path: '/config/users', show: auth.edit_all},
           ]
         },
         {

@@ -48,6 +48,7 @@
           <v-snackbar
               v-model="success"
               color="success"
+              timeout="2000"
           >Password changed!</v-snackbar>
 
         </v-form>
