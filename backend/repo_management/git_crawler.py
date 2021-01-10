@@ -110,10 +110,10 @@ class CommitCrawler:
         self._current_operation = CommitCrawlerState.IDLE
         self._error_message = ''
 
-    def is_checked_out(self):
+    def is_cloned(self):
         return Path(self._repo_path, '.git').exists()
 
-    def checkout(self, repo_url):
+    def clone(self, repo_url):
         git.Repo.clone_from(repo_url, self._repo_path, no_checkout=True)
 
     def get_crawl_status(self):
@@ -141,7 +141,7 @@ class CommitCrawler:
         self._current_operation = CommitCrawlerState.IDLE
 
     def _crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
-        if not self.is_checked_out():
+        if not self.is_cloned():
             raise FileNotFoundError('The repository has not been checked out yet.')
 
         self._repo = git.Repo(self._repo_path)

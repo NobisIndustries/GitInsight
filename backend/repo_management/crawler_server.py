@@ -20,14 +20,14 @@ def crawl_with_reset(*args, **kwargs):
     reset_cache()
 
 
-@app.get('/checkout')
-def is_checked_out():
-    return crawler.is_checked_out()
+@app.get('/clone')
+def is_cloned():
+    return crawler.is_cloned()
 
 
-@app.put('/checkout')
-def checkout_repo(repo_url: str):
-    crawler.checkout(repo_url)
+@app.put('/clone')
+def clone_repo(repo_url: str):
+    crawler.clone(repo_url)
 
 
 @app.get('/crawl')
@@ -51,7 +51,7 @@ def periodically_trigger_crawling(check_period_seconds=30):
         config = CrawlConfig.load()
         sleep_time = check_period_seconds
         execute_after_wait = False
-        if config.crawl_periodically_active and crawler.is_checked_out():
+        if config.crawl_periodically_active and crawler.is_cloned():
             time_to_next_update = crontab.CronTab(config.crawl_periodically_crontab).next(default_utc=True)
             execute_after_wait = time_to_next_update <= check_period_seconds
             sleep_time = min(check_period_seconds, time_to_next_update)
