@@ -68,7 +68,8 @@ export default {
         this.load_entry();
     },
     async load_entry() {
-      await this.$store.dispatch('load_info_of_entry', this.new_path, this.limit_results_to);
+      await this.$store.dispatch('load_info_of_entry', {entry_path: this.new_path,
+        limit_results_to: this.limit_results_to});
 
       const entry_history = this.$store.getters.get_current_entry_history_dataframe;
       if (!entry_history) {

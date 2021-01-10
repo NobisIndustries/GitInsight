@@ -56,7 +56,7 @@ export const entry_details_store = {
             });
             return request;
         },
-        load_info_of_entry(context, entry_path, limit_results_to) {
+        load_info_of_entry(context, {entry_path, limit_results_to}) {
             context.commit('set_history_is_loading', true);
             context.commit('set_current_entry_path', entry_path);
 
