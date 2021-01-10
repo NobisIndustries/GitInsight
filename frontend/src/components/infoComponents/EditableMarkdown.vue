@@ -11,6 +11,7 @@
         v-else
         linkify
         class="text-justify"
+        :key="text"
     >{{ text }}</VueMarkdown>
     <v-btn
         v-if="can_edit"

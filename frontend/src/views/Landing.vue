@@ -48,6 +48,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch('load_description');
     this.$store.dispatch('load_app_version');
   },
 }
