@@ -10,7 +10,9 @@
         <v-list-item
             v-for="item in menu_items"
             :key="item.title"
-            :to="item.path">
+            :to="item.path"
+            v-show="item.show"
+        >
           <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-action>
@@ -18,7 +20,9 @@
         </v-list-item>
         <v-list-group
             v-for="item in menu_items_with_sub_items"
-            :key="item.title">
+            :key="item.title"
+            v-show="item.show"
+        >
           <template v-slot:activator>
             <v-list-item-action>
               <v-icon>{{ item.icon }}</v-icon>
@@ -29,10 +33,11 @@
               v-for="subItem in item.children"
               :key="subItem.title"
               :to="subItem.path"
+              v-show="subItem.show"
           >
             <v-list-item-title>{{ subItem.title }}</v-list-item-title>
           </v-list-item>
-          <v-list-item>
+          <v-list-item v-if="item.title === 'Configuration'">
             <DarkModeSwitch />
           </v-list-item>
         </v-list-group>
@@ -51,6 +56,7 @@
       <EditableTitle
           :title="$store.state.common.repo_name"
           @update="save_repo_name($event)"
+          :can_edit="$store.state.auth.edit_all"
       />
       <v-spacer></v-spacer>
       <v-toolbar-items class="hidden-sm-and-down">
@@ -58,6 +64,7 @@
             v-for="item in menu_items"
             :key="item.title"
             :to="item.path"
+            v-show="item.show"
             color="dark"
             dark
         >
@@ -79,9 +86,10 @@
                 color="dark"
                 dark
                 class="nav-button"
+                v-show="item.show"
             >
               <v-icon left dark>{{ item.icon }}</v-icon>
-              {{ item.title }}
+              <span v-show="!item.icon_only">{{ item.title }}</span>
             </v-btn>
           </template>
 
@@ -90,10 +98,12 @@
                 v-for="subItem in item.children"
                 :key="subItem.title"
                 :to="subItem.path"
+                v-show="subItem.show"
+                class="sub-item"
             >
               <v-list-item-title>{{ subItem.title }}</v-list-item-title>
             </v-list-item>
-            <v-list-item>
+            <v-list-item v-if="item.title === 'Configuration'" class="sub-item">
               <DarkModeSwitch />
             </v-list-item>
           </v-list>
@@ -102,6 +112,12 @@
     </v-app-bar>
   </div>
 </template>
+
+<style scoped>
+.sub-item {
+  width: 15rem;
+}
+</style>
 
 
 <script>
@@ -112,7 +128,6 @@ export default {
   name: 'Navigation',
   components: {DarkModeSwitch, EditableTitle},
   props: {
-    title: String,
     menu_items: Array,
     menu_items_with_sub_items: Array,
   },

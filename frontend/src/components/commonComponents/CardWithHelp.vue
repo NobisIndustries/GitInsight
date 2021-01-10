@@ -2,7 +2,7 @@
   <v-card elevation="2" class="pt-3">
     <v-tooltip
         left
-        color="#333333"
+        color="dark"
     >
       <template v-slot:activator="{ on, attrs }">
         <v-btn

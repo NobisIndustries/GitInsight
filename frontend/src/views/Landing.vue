@@ -6,6 +6,7 @@
             :text="$store.state.common.start_page_text"
             @update="save_start_page_text($event)"
             class="mt-8"
+            :can_edit="$store.state.auth.edit_all"
         />
       </v-col>
     </v-row>
