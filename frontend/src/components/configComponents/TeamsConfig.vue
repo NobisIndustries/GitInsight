@@ -73,7 +73,7 @@
 </style>
 
 <script>
-import SingleTeam from "@/views/config/SingleTeam";
+import SingleTeam from "@/components/configComponents/SingleTeam";
 
 const TEAMS_PER_PAGE = 7;
 
