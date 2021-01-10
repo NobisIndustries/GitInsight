@@ -1,6 +1,14 @@
 <template>
   <CardWithHelp
-      help_text="<p>Funky machine learning magic. Use at own risk.</p>"
+      help_text="<p>Find out which contributors do similar work. This analysis leverages state of the art unsupervised
+      machine learning approaches* to cluster together authors with similar commit patterns (e.g. contributed to
+      similar files at similar times). Authors grouped together have most likely the same project priorities, even if
+      they do not belong to the same team officially.</p>
+      <p>The marker size corresponds to the number of commits the author made in the given time. To get better results,
+      authors with less than 10 commits in the given time are filtered out, as well as big commits.</p>
+      <p>(* Actually it uses TF-IDF statistics with some UMAP dimensionality reduction sprinkled on top, but that
+      sounds less marketable. The interesting thing is that we do not give the algorithm any information about the
+      official teams, so its output is only dependent on the intrinsic commit patterns itself.)</p>"
   >
     <v-col align="center">
       <div class="card-heading">Similar Authors</div>

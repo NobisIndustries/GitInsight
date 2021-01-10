@@ -33,6 +33,7 @@
                   color="primary"
               >Save
               </v-btn>
+              <v-snackbar timeout="2000" color="info" v-model="saved">Saved</v-snackbar>
             </div>
           </v-col>
         </CardWithHelp>
@@ -52,11 +53,14 @@ export default {
   data() {
     return {
       active_tab: null,
+      saved: false,
     };
   },
   methods: {
     save() {
       this.$store.dispatch('save_author_info');
+      this.saved = true;
+
     },
   },
   mounted() {
