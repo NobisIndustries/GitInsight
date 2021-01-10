@@ -10,8 +10,30 @@
         />
       </v-col>
     </v-row>
+    <div class="app-version">
+      GitInsight v{{ $store.state.common.app_version }}
+      <v-btn
+          href="https://github.com/fabianproductions/GitInsight"
+          target="_blank"
+          icon
+          fab
+          small
+      >
+        <v-icon>mdi-github</v-icon>
+      </v-btn>
+    </div>
   </v-container>
 </template>
+
+<style scoped>
+.app-version {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  position: absolute;
+  bottom: 0.6rem;
+  right: 1rem;
+}
+</style>
 
 <script>
 import EditableMarkdown from "@/components/infoComponents/EditableMarkdown";
@@ -24,7 +46,10 @@ export default {
       this.$store.commit('set_start_page_text', text);
       this.$store.dispatch('save_description');
     },
-  }
+  },
+  mounted() {
+    this.$store.dispatch('load_app_version');
+  },
 }
 </script>
 

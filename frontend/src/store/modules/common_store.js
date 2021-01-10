@@ -9,6 +9,8 @@ export const common_store = {
 
         repo_name: null,
         start_page_text: null,
+
+        app_version: '',
     },
     mutations: {
         set_available_branches(state, branches) {
@@ -21,8 +23,11 @@ export const common_store = {
             state.repo_name = name;
         },
         set_start_page_text(state, text) {
-          state.start_page_text = text;
+            state.start_page_text = text;
         },
+        set_app_version(state, version) {
+            state.app_version = version;
+        }
     },
 
     actions: {
@@ -42,6 +47,12 @@ export const common_store = {
         save_description(context) {
             const data = {repo_name: context.state.repo_name, start_page_text: context.state.start_page_text}
             let request = axios.put(`${API_BASE_PATH}/descriptions/description`, data);
+            return request;
+        },
+        load_app_version(context) {
+            let request = axios.get(`${API_BASE_PATH}/descriptions/version`).then(response => {
+                context.commit('set_app_version', response.data);
+            });
             return request;
         }
 
