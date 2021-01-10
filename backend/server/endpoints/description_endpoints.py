@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from configs import ProjectDescriptionConfig
+from server.endpoints.auth_common import user_can_edit_all
 
 router = APIRouter()
 
@@ -11,5 +12,5 @@ def get_description():
 
 
 @router.put('/description')
-def set_description(config: ProjectDescriptionConfig):
+def set_description(config: ProjectDescriptionConfig, can_edit_all=Depends(user_can_edit_all)):
     config.save_file()

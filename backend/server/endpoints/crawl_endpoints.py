@@ -1,24 +1,25 @@
 import crontab
 import requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from starlette import status
 
 from configs import CrawlConfig
 from constants import CRAWL_SERVICE_PORT
 from helpers.security_helpers import get_random_token
+from server.endpoints.auth_common import user_can_edit_all
 
 router = APIRouter()
 CRAWL_SERVICE_URL = f'http://127.0.0.1:{CRAWL_SERVICE_PORT}'
 
 
 @router.get('/status')
-async def get_crawler_status():
+async def get_crawler_status(can_edit_all=Depends(user_can_edit_all)):
     return requests.get(f'{CRAWL_SERVICE_URL}/crawl').json()
 
 
 @router.put('/update')
-async def update_db():
+async def update_db(can_edit_all=Depends(user_can_edit_all)):
     requests.put(f'{CRAWL_SERVICE_URL}/crawl').raise_for_status()
 
 
@@ -37,7 +38,7 @@ async def update_db_webhook(payload: WebhookToken):
 
 
 @router.put('/config')
-async def write_config(crawl_config: CrawlConfig):
+async def write_config(crawl_config: CrawlConfig, can_edit_all=Depends(user_can_edit_all)):
     try:
         crontab.CronTab(crawl_config.crawl_periodically_crontab)
     except ValueError as e:
@@ -47,10 +48,10 @@ async def write_config(crawl_config: CrawlConfig):
 
 
 @router.get('/config')
-async def get_config() -> CrawlConfig:
+async def get_config(can_edit_all=Depends(user_can_edit_all)) -> CrawlConfig:
     return CrawlConfig.load()
 
 
 @router.get('/random_token')
-async def get_random_webhook_token() -> str:
+async def get_random_webhook_token(can_edit_all=Depends(user_can_edit_all)) -> str:
     return get_random_token()
