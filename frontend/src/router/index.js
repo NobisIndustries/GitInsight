@@ -3,6 +3,7 @@ import Router from 'vue-router';
 
 const router_options = [
   { path: '/', component: 'Landing' },
+  { path: '/first_steps', component: 'FirstSteps' },
   { path: '/details', component: 'DetailAnalysis' },
   { path: '/overview', component: 'OverviewAnalysis' },
   { path: '/user/login', component: 'user/LoginView' },

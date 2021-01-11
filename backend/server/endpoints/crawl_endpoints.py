@@ -13,6 +13,22 @@ router = APIRouter()
 CRAWL_SERVICE_URL = f'http://127.0.0.1:{CRAWL_SERVICE_PORT}'
 
 
+@router.get('/clone')
+async def is_cloned():
+    return requests.get(f'{CRAWL_SERVICE_URL}/clone').json()
+
+
+class CloneInput(BaseModel):
+    repo_url: str
+    deploy_key: str = ''
+
+
+@router.put('/clone')
+def clone_repo(clone_input: CloneInput, can_edit_all=Depends(user_can_edit_all)):
+    response = requests.put(f'{CRAWL_SERVICE_URL}/clone', data=clone_input.json())
+    return response.json()
+
+
 @router.get('/status')
 async def get_crawler_status(can_edit_all=Depends(user_can_edit_all)):
     return requests.get(f'{CRAWL_SERVICE_URL}/crawl').json()

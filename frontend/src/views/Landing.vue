@@ -50,6 +50,11 @@ export default {
   mounted() {
     this.$store.dispatch('load_description');
     this.$store.dispatch('load_app_version');
+
+    this.$store.dispatch('load_repo_is_cloned').then(() => {
+      if (!this.$store.state.common.repo_is_cloned)
+        this.$router.push('first_steps');
+    });
   },
 }
 </script>

@@ -10,6 +10,7 @@ from caching.caching_decorator import reset_cache
 from configs import CrawlConfig
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawler import CommitCrawler, CommitProvider
+from server.endpoints.crawl_endpoints import CloneInput
 
 app = FastAPI()
 crawler = CommitCrawler(REPO_PATH, CommitProvider())
@@ -26,8 +27,16 @@ def is_cloned():
 
 
 @app.put('/clone')
-def clone_repo(repo_url: str):
-    crawler.clone(repo_url)
+def clone_repo(clone_input: CloneInput):
+    response = {'success': True, 'error_msg': ''}
+    try:
+        crawler.set_ssh_key(clone_input.deploy_key)
+        crawler.clone(clone_input.repo_url)
+    except Exception as e:
+        response['success'] = False
+        response['error_msg'] = str(e)
+    return response
+
 
 
 @app.get('/crawl')

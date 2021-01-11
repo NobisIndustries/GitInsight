@@ -21,26 +21,7 @@
           <v-col>
             <div class="card-heading">Update Configuration</div>
             <div class="card-subheading">Current Status</div>
-            <div class="settings-block">
-              <v-progress-linear
-                  :value="$store.state.config.crawl_status.percentage"
-                  :color="$store.state.config.crawl_status.is_crawling ? 'primary' : 'grey lighten-1'"
-              ></v-progress-linear>
-              <div
-                  class="message-text"
-                  :class="{'message-text-active': $store.state.config.crawl_status.is_crawling}"
-              >
-                {{ $store.state.config.crawl_status.status_message }}
-              </div>
-              <v-alert
-                  type="error"
-                  outlined
-                  v-show="$store.state.config.crawl_status.error_message !== ''"
-              >
-                An error occured while updating:<br>
-                {{ $store.state.config.crawl_status.error_message }}
-              </v-alert>
-            </div>
+            <UpdateProgress class="settings-block"/>
             <div class="card-subheading">Base Settings</div>
             <div class="settings-block">
               <v-switch
@@ -114,16 +95,7 @@
   margin-bottom: 2rem;
 }
 
-.message-text {
-  font-size: 0.8rem;
-  opacity: 0.7;
-  margin-top: 0.5rem;
-}
 
-.message-text-active {
-  color: var(--v-primary-base);
-  opacity: 1;
-}
 </style>
 
 <script>
@@ -132,20 +104,20 @@ import {API_BASE_PATH} from '@/store/constants'
 
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
 import DaysSelector from "@/components/commonComponents/DaysSelector";
+import UpdateProgress from "@/components/configComponents/UpdateProgress";
 
 export default {
   name: "DatabaseUpdateConfig",
-  components: {DaysSelector, CardWithHelp},
+  components: {UpdateProgress, DaysSelector, CardWithHelp},
   data() {
     return {
       crawl_config: {},
-      crawl_updater: null,
-    }
+    };
   },
   methods: {
     trigger_update() {
       this.save_config().then(() => {
-        axios.put(`${API_BASE_PATH}/crawl/update`);
+        this.$store.dispatch('update_db');
       });
     },
     save_config() {
@@ -158,16 +130,9 @@ export default {
     }
   },
   mounted() {
-    this.crawl_updater = setInterval(() => {
-      this.$store.dispatch('load_crawl_status')
-    }, 1000);
-
     this.$store.dispatch('load_crawl_config').then(() => {
       this.crawl_config = this.$store.state.config.crawl_config;
     });
   },
-  beforeDestroy() {
-    clearInterval(this.crawl_updater);
-  }
 }
 </script>

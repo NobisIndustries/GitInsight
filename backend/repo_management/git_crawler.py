@@ -13,7 +13,7 @@ from sqlalchemy.exc import OperationalError
 
 import db_schema as db
 from helpers.git_helpers import get_repo_branches
-from helpers.path_helpers import REPO_PATH
+from helpers.path_helpers import REPO_PATH, KEYS_PATH
 from repo_management.git_crawl_items import Commit
 
 
@@ -97,6 +97,9 @@ class CommitCrawler:
 
     CLEAN_BRANCH_NAME_REGEX = re.compile(r'^origin\/')
 
+    SSH_KEY_PATH = Path(KEYS_PATH, 'git_ssh_key')
+    GIT_SSH_COMMAND = f'ssh -i {SSH_KEY_PATH}'
+
     def __init__(self, repo_path: Path, commit_provider: CommitProvider):
         self._repo_path = Path(repo_path)
         self._commit_provider = commit_provider
@@ -114,7 +117,16 @@ class CommitCrawler:
         return Path(self._repo_path, '.git').exists()
 
     def clone(self, repo_url):
-        git.Repo.clone_from(repo_url, self._repo_path, no_checkout=True)
+        env = {'GIT_SSH_COMMAND': self.GIT_SSH_COMMAND} if self.SSH_KEY_PATH.exists() else {}
+        git.Repo.clone_from(repo_url, self._repo_path, no_checkout=True, env=env)
+
+    def set_ssh_key(self, key: str):
+        if not key:
+            if self.SSH_KEY_PATH.exists():
+                self.SSH_KEY_PATH.unlink()
+        else:
+            with self.SSH_KEY_PATH.open('w', encoding='utf-8') as f:
+                f.write(key)
 
     def get_crawl_status(self):
         return {
@@ -147,7 +159,7 @@ class CommitCrawler:
         self._repo = git.Repo(self._repo_path)
         if update_before_crawl:
             self._current_operation = CommitCrawlerState.UPDATE_REPO
-            self._repo.remotes[0].fetch()
+            self.__fetch()
 
         self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
         self._commit_provider.cache_from_db()
@@ -162,14 +174,19 @@ class CommitCrawler:
 
         return CrawlResult(self._child_commit_graph, current_paths_of_branches)
 
+    def __fetch(self):
+        kwargs = {'GIT_SSH_COMMAND': self.GIT_SSH_COMMAND} if self.SSH_KEY_PATH.exists() else {}
+        with self._repo.git.custom_environment(**kwargs):
+            self._repo.remotes[0].fetch()
+
     def __get_latest_commits_of_branches(self, limit_tracked_branches_days_last_activity):
-        minTimestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
+        min_timestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
                         if limit_tracked_branches_days_last_activity else 0)
         commit_hash_of_branch = {}
         for branch in get_repo_branches(self._repo):
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"').strip()
             commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
-            if commit_metadata.authored_timestamp >= minTimestamp:
+            if commit_metadata.authored_timestamp >= min_timestamp:
                 commit_hash_of_branch[commit_hash] = self.__clean_origin_branch_name(branch)
         return commit_hash_of_branch
 

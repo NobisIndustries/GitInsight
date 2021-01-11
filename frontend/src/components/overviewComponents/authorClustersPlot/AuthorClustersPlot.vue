@@ -29,7 +29,6 @@
 
 <script>
 import CardWithHelp from "@/components/commonComponents/CardWithHelp";
-import {PLOTLY_MODE_BAR_BUTTONS_TO_REMOVE} from "@/store/constants";
 import PlotlyGraph from "@/components/commonComponents/PlotlyGraph";
 
 export default {
@@ -41,9 +40,7 @@ export default {
   data() {
     return {
       selected_file_types: [],
-      mode_bar_buttons_to_remove: PLOTLY_MODE_BAR_BUTTONS_TO_REMOVE,
       plot_layout: {
-        hovermode: 'closest',
         xaxis: {
           showgrid: false,
           zeroline: false,

@@ -11,6 +11,8 @@ export const common_store = {
         start_page_text: null,
 
         app_version: '',
+
+        repo_is_cloned: false,
     },
     mutations: {
         set_available_branches(state, branches) {
@@ -27,6 +29,9 @@ export const common_store = {
         },
         set_app_version(state, version) {
             state.app_version = version;
+        },
+        set_repo_is_cloned(state, is_cloned) {
+            state.repo_is_cloned = is_cloned;
         }
     },
 
@@ -52,6 +57,12 @@ export const common_store = {
         load_app_version(context) {
             let request = axios.get(`${API_BASE_PATH}/descriptions/version`).then(response => {
                 context.commit('set_app_version', response.data);
+            });
+            return request;
+        },
+        load_repo_is_cloned(context) {
+            let request = axios.get(`${API_BASE_PATH}/crawl/clone`).then(response => {
+                context.commit('set_repo_is_cloned', response.data);
             });
             return request;
         }

@@ -12,6 +12,10 @@ export const config_store = {
             error_message: '',
         },
         crawl_config: {},
+        clone_result: {
+            successful: false,
+            error_msg: '',
+        },
 
         authors: {},
         teams: {},
@@ -57,6 +61,9 @@ export const config_store = {
         set_crawl_config(state, config) {
             state.crawl_config = config;
         },
+        set_clone_result(state, result) {
+            state.clone_result = result;
+        },
 
         set_authors(state, authors) {
             state.authors = authors;
@@ -99,6 +106,16 @@ export const config_store = {
         load_crawl_status(context) {
             let request = axios.get(`${API_BASE_PATH}/crawl/status`).then(response => {
                 context.commit('calculate_crawl_progress', response.data);
+            });
+            return request;
+        },
+        update_db() {
+            return axios.put(`${API_BASE_PATH}/crawl/update`);
+        },
+        clone_repo(context, {repo_url, deploy_key}) {
+            const data = {repo_url: repo_url, deploy_key: deploy_key}
+            let request = axios.put(`${API_BASE_PATH}/crawl/clone`, data).then(response => {
+                context.commit('set_clone_result', response.data);
             });
             return request;
         },

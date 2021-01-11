@@ -97,7 +97,7 @@ def init_authentication():
     admin_permissions = UserPermissions(view_analysis=True, edit_contributors=True, edit_all=True)
     add_user(first_user, NewUserInput(password=first_password, permissions=admin_permissions))
 
-    guest_permissions = UserPermissions(view_analysis=True, edit_contributors=False, edit_all=False)
+    guest_permissions = UserPermissions(view_analysis=False, edit_contributors=False, edit_all=False)
     add_user(GUEST_USERNAME, NewUserInput(password='dummy', permissions=guest_permissions))
 
     print(f'{"#" * 80}\n\nFIRST TIME CREDENTIALS\n\n  username: {first_user}\n  password: {first_password}\n\n'

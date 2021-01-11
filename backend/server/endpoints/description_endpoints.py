@@ -14,10 +14,7 @@ with version_file.open('r', encoding='utf-8') as f:
 
 @router.get('/description')
 def get_description():
-    a= ProjectDescriptionConfig.load()
-    print(a.start_page_text)
-    return a
-
+    return ProjectDescriptionConfig.load()
 
 
 @router.put('/description')
