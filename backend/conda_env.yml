@@ -14,8 +14,9 @@ dependencies:
     - bidict
     - fastapi
     - uvicorn
-    - -ftfy
+    - ftfy
     - crontab
     - python-jose[cryptography]
     - passlib[bcrypt]
     - python-multipart
+    - aiofiles

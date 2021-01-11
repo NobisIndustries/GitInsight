@@ -1,11 +1,13 @@
-import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
+from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import HTMLResponse
+from starlette.staticfiles import StaticFiles
+
+from helpers.path_helpers import DIST_DIR
 from server.endpoints import crawl_endpoints, entries_endpoints, overview_endpoints, authors_endpoints, \
     description_endpoints, auth_endpoints
-
-COMMON_API_PREFIX = '/api'
 
 app = FastAPI()
 
@@ -20,9 +22,21 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.include_router(crawl_endpoints.router, prefix=f'{COMMON_API_PREFIX}/crawl', tags=['crawl'])
-app.include_router(authors_endpoints.router, prefix=f'{COMMON_API_PREFIX}/authors', tags=['authors'])
-app.include_router(entries_endpoints.router, prefix=f'{COMMON_API_PREFIX}/entries', tags=['entries'])
-app.include_router(overview_endpoints.router, prefix=f'{COMMON_API_PREFIX}/overview', tags=['overview'])
-app.include_router(description_endpoints.router, prefix=f'{COMMON_API_PREFIX}/descriptions', tags=['descriptions'])
-app.include_router(auth_endpoints.router, prefix=f'{COMMON_API_PREFIX}/auth', tags=['auth'])
+api_router = APIRouter()
+
+api_router.include_router(crawl_endpoints.router, prefix='/crawl', tags=['crawl'])
+api_router.include_router(authors_endpoints.router, prefix='/authors', tags=['authors'])
+api_router.include_router(entries_endpoints.router, prefix='/entries', tags=['entries'])
+api_router.include_router(overview_endpoints.router, prefix='/overview', tags=['overview'])
+api_router.include_router(description_endpoints.router, prefix='/descriptions', tags=['descriptions'])
+api_router.include_router(auth_endpoints.router, prefix='/auth', tags=['auth'])
+
+app.include_router(api_router, prefix='/api')
+
+
+app.mount('/static', StaticFiles(directory=DIST_DIR, html=True), name='static')
+with Path(DIST_DIR, 'index.html').open('r', encoding='utf-8') as f:
+    index_content = f.read()
+@app.get('/', include_in_schema=False)
+def serve_root():
+    return HTMLResponse(index_content)
