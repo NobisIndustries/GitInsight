@@ -11,7 +11,7 @@ RUN apt-get update -y; apt-get upgrade -y; apt-get install -y tzdata git-all;
 ENV TZ Europe/Berlin
 
 COPY backend/conda_env.yml /app_setup/env.yml
-RUN conda env create -f /app_setup/env.yml
+RUN conda env create -f /app_setup/env.yml; conda clean --all
 ENV CONDA_DIR=/opt/conda/envs/GitInsight/bin
 
 
