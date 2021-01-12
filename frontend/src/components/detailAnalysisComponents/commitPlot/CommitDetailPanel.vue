@@ -9,7 +9,7 @@
           <div class="d-flex mr-5">
             <div>
               <div class="heading-light my-2">
-              <span v-if="commit_info_row.person_contact_link === ''">
+              <span v-if="commit_info_row.person_contact_link === ''" class="mr-1">
                 {{ commit_info_row.author }}</span>
                 <span v-else><a v-bind:href="commit_info_row.person_contact_link" class="mr-1" target="_blank">
                 {{ commit_info_row.author }}</a>
@@ -66,6 +66,12 @@
 .heading-light {
   font-size: 1.1rem;
   font-weight: 350;
+}
+.theme--light .heading-light {
+  color: rgba(0, 0, 0, 0.87);;
+}
+.theme--dark .heading-light {
+  color: #ffffff;
 }
 
 .low-opacity {
