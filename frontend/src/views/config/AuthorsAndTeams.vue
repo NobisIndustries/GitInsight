@@ -23,7 +23,7 @@
               <v-tab key="author">Edit Authors</v-tab>
               <v-tab key="team">Edit Teams</v-tab>
             </v-tabs>
-            <v-tabs-items v-model="active_tab" class="pa-5">
+            <v-tabs-items v-model="active_tab" class="pa-5 no-cutoff">
               <v-tab-item key="author"><AuthorsConfig/></v-tab-item>
               <v-tab-item key="team"><TeamsConfig/></v-tab-item>
             </v-tabs-items>
@@ -41,6 +41,12 @@
     </v-row>
   </v-container>
 </template>
+
+<style scoped>
+.no-cutoff {
+  overflow: initial;
+}
+</style>
 
 <script>
 import CardWithHelp from '@/components/commonComponents/CardWithHelp';

@@ -10,6 +10,7 @@
       <v-color-picker
           v-model="color"
           v-show="show_picker"
+          elevation="5"
           hide-mode-switch
           mode="hexa"
           class="color-picker"
