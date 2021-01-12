@@ -64,7 +64,7 @@ class BranchInfoProvider:
     def _get_hashes_in_branch(self, branch: str) -> List[str]:
         repo = git.Repo(REPO_PATH)
         branch = get_full_branch_name_with_check(repo, branch)
-        return repo.git.execute(f'git log "{branch}" --pretty=format:%H').splitlines()
+        return repo.git.execute(f'git log "{branch}" --pretty=format:%H', shell=True).splitlines()
 
 
 class LineCountProvider:
@@ -78,11 +78,11 @@ class LineCountProvider:
     def get_line_counts(self, branch):
         repo = git.Repo(REPO_PATH)
         branch = get_full_branch_name_with_check(repo, branch)
-        commit_hash = repo.git.execute(f'git rev-parse {branch}').strip()
+        commit_hash = repo.git.execute(f'git rev-parse {branch}', shell=True).strip()
         return self._parse_line_counts(repo, commit_hash)
 
     def _parse_line_counts(self, repo, commit_hash):
-        raw_text = repo.git.execute(f'git diff --stat {self.MAGIC_EMPTY_HASH} {commit_hash}')
+        raw_text = repo.git.execute(f'git diff --stat {self.MAGIC_EMPTY_HASH} {commit_hash}', shell=True)
         line_counts_of_files = {}
         for raw_line in raw_text.splitlines():
             file_path, line_count = self._parse_single_git_line_count_line(raw_line)
