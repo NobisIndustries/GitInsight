@@ -13,7 +13,7 @@
     <div class="app-version">
       GitInsight v{{ $store.state.common.app_version }}
       <v-btn
-          href="https://github.com/fabianproductions/GitInsight"
+          href="https://github.com/nobisindustries/GitInsight"
           target="_blank"
           icon
           fab
