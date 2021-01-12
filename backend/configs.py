@@ -85,7 +85,7 @@ class ProjectDescriptionConfig(JsonBaseConfig):
                             'which part? What part is most active? Who can I ask for help with this class I\'ve never '
                             'seen before? And are there architectural problems that I haven\'t noticed yet?*\n\n'
                             'GitInsight lets you assign teams to the contributors of a git repository. Various '
-                            'analyses combine these metadata with the edit history of every tracked file to provide '
+                            'analyses combine this metadata with the edit history of every tracked file to provide '
                             'you with better overview.\n\n'
                             '## What to do next?\n\n'
                             'You should first [create teams and assign contributors to '

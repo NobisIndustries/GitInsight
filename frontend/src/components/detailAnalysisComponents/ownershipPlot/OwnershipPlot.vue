@@ -5,6 +5,7 @@
                advanced (but more subjective) method weights these edits against each other based on the number of
                affected files of the containing commit (more files are less relevant) as well as the age (older
                commits are less relevant).</p>"
+      class="px-2"
   >
     <v-col align="center">
       <div class="card-heading">Ownership</div>
