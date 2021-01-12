@@ -92,7 +92,7 @@ export default {
       const plot_options = {
         'authors': ['author', 'team_display_name', false],
         'files': ['current_path', 'team_display_name', false],
-        'renames': ['new_path', 'new_path', true]
+        'renames': ['new_path', 'current_path', true]
       };
       let [y_column, group_by_column, show_lines] = plot_options[this.selected_plot_type];
 
