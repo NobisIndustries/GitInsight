@@ -38,7 +38,6 @@ def clone_repo(clone_input: CloneInput):
     return response
 
 
-
 @app.get('/crawl')
 def get_crawl_status():
     return crawler.get_crawl_status()

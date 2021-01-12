@@ -5,13 +5,21 @@
         label="Repo URL"
         outlined
     ></v-text-field>
+    <v-fade-transition>
+      <v-alert
+          type="error"
+          outlined
+          v-show="!repo_address_format_valid"
+      >You have to use the SSH repo address format (<i>git@...</i>) to use authentication.
+      </v-alert>
+    </v-fade-transition>
     <v-switch
-        v-model="show_deploy_key"
+        v-model="use_deploy_key"
         label="Needs Authentication"
     ></v-switch>
     <v-textarea
         v-model="deploy_key"
-        v-show="show_deploy_key"
+        v-show="use_deploy_key"
         filled
         label="Deploy key"
         hint="A private deploy key for your repo without password"
@@ -29,8 +37,9 @@
         @click="clone_repo"
         class="float-right"
         :loading="is_cloning"
-        :disabled="is_cloning"
-    >Clone</v-btn>
+        :disabled="is_cloning || !repo_address_format_valid"
+    >Clone
+    </v-btn>
   </div>
 </template>
 
@@ -45,14 +54,15 @@ export default {
     return {
       repo_url: '',
       deploy_key: '',
-      show_deploy_key: false,
+      use_deploy_key: false,
       is_cloning: false,
     };
   },
   methods: {
     clone_repo() {
       this.is_cloning = true;
-      this.$store.dispatch('clone_repo', {repo_url: this.repo_url, deploy_key: this.deploy_key}).then(
+      this.$store.dispatch('clone_repo', {repo_url: this.repo_url,
+        deploy_key: this.use_deploy_key ? this.deploy_key : ''}).then(
           () => {
             this.is_cloning = false;
             if (this.$store.state.config.clone_result)
@@ -60,7 +70,13 @@ export default {
 
             this.$store.dispatch('load_repo_is_cloned');
           });
-
+    }
+  },
+  computed: {
+    repo_address_format_valid() {
+      if(this.use_deploy_key)
+        return !this.repo_url.startsWith('https');
+      return true
     }
   }
 }

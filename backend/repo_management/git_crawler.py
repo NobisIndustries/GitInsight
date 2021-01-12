@@ -1,3 +1,4 @@
+import os
 import pprint
 import re
 import time
@@ -98,7 +99,7 @@ class CommitCrawler:
     CLEAN_BRANCH_NAME_REGEX = re.compile(r'^origin\/')
 
     SSH_KEY_PATH = Path(KEYS_PATH, 'git_ssh_key')
-    GIT_SSH_COMMAND = f'ssh -i {SSH_KEY_PATH}'
+    GIT_SSH_COMMAND = f'ssh -i {SSH_KEY_PATH} -o "StrictHostKeyChecking no"'
 
     def __init__(self, repo_path: Path, commit_provider: CommitProvider):
         self._repo_path = Path(repo_path)
@@ -127,6 +128,7 @@ class CommitCrawler:
         else:
             with self.SSH_KEY_PATH.open('w', encoding='utf-8') as f:
                 f.write(key)
+            os.chmod(self.SSH_KEY_PATH, 0o600)
 
     def get_crawl_status(self):
         return {
@@ -165,7 +167,7 @@ class CommitCrawler:
         self._commit_provider.cache_from_db()
 
         self._current_operation = CommitCrawlerState.EXTRACT_COMMITS
-        all_hashes = self._repo.git.execute('git rev-list --all').splitlines()
+        all_hashes = self._repo.git.execute('git rev-list --all', shell=True).splitlines()
         self._child_commit_graph = self.__extract_child_tree(all_hashes)
 
         self._current_operation = CommitCrawlerState.CALCULATE_PATHS
@@ -184,7 +186,7 @@ class CommitCrawler:
                         if limit_tracked_branches_days_last_activity else 0)
         commit_hash_of_branch = {}
         for branch in get_repo_branches(self._repo):
-            commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"').strip()
+            commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"', shell=True).strip()
             commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
             if commit_metadata.authored_timestamp >= min_timestamp:
                 commit_hash_of_branch[commit_hash] = self.__clean_origin_branch_name(branch)
