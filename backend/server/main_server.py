@@ -37,6 +37,6 @@ app.include_router(api_router, prefix='/api')
 app.mount('/static', StaticFiles(directory=DIST_DIR, html=True), name='static')
 with Path(DIST_DIR, 'index.html').open('r', encoding='utf-8') as f:
     index_content = f.read()
-@app.get('/', include_in_schema=False)
+@app.get('/{whatever:path}', include_in_schema=False)
 def serve_root():
     return HTMLResponse(index_content)
