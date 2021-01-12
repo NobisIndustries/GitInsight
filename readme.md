@@ -3,7 +3,7 @@
 **tl;dr**: This is a standalone web application that shows various analyses of a given repository. You can assign teams
 to the contributors and use this information to gain new insights into your project.
 
-**Try it out**: `docker run -v ./gitinsight_data:/app/data -p 80:80 fabianproductions/gitinsight:latest`
+**Try it out**: `docker run -v ~/gitinsight_data:/app/data -p 80:80 fabianproductions/gitinsight:latest`
 
 ## What is this about?
 
