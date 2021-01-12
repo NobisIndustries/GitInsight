@@ -46,7 +46,7 @@
                 but database updates after that will be much faster.
               </v-card-text>
               <div class="full-width d-flex justify-center">
-                <UpdateProgress class="flex-grow-1 mx-4 mb-5"/>
+                <UpdateProgress class="flex-grow-1 mx-4 mb-5" />
               </div>
             </v-stepper-content>
             <v-stepper-content step="4">
@@ -91,6 +91,9 @@ export default {
       return 4;
     },
   },
+  mounted() {
+    this.$store.dispatch('load_repo_is_cloned');
+  }
 }
 </script>
 
