@@ -23,6 +23,8 @@
       branches_request.then(() => {
         let available_branches = this.$store.state.common.available_branches;
         let standard_branch = available_branches[0];
+        if (available_branches.indexOf('main') > -1)
+          standard_branch = 'main';
         if (available_branches.indexOf('master') > -1)
           standard_branch = 'master';
         this.$store.commit('set_current_branch', standard_branch);
