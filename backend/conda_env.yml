@@ -20,3 +20,4 @@ dependencies:
     - passlib[bcrypt]
     - python-multipart
     - aiofiles
+    - loguru

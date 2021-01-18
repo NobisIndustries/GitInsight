@@ -5,11 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 
+from helpers.logging_helpers import init_logging
 from helpers.path_helpers import DIST_DIR
 from server.endpoints import crawl_endpoints, entries_endpoints, overview_endpoints, authors_endpoints, \
     description_endpoints, auth_endpoints
 
 app = FastAPI()
+init_logging(app)
 
 origins = [
     'http://localhost:8080',

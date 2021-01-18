@@ -1,16 +1,18 @@
 import os
 import pstats
-import time
 from cProfile import Profile
+import time
+
+from loguru import logger
 
 
 def time_it(method):
     def timed(*args, **kw):
-        tsBefore = time.time()
+        ts_before = time.time()
         result = method(*args, **kw)
-        tsAfter = time.time()
+        ts_after = time.time()
 
-        print(f'Method "{method.__name__}"  took {tsAfter - tsBefore} s to run')
+        logger.info(f'Method "{method.__name__}"  took {ts_after - ts_before} s to run')
         return result
     return timed
 
@@ -28,7 +30,7 @@ def profile_it(save_dir):
             try:
                 result = profiler.runcall(method, *args, **kwargs)
             except Exception as e:
-                print(f'Could not run method call: {e}')
+                logger.error(f'Could not run method call: {e}')
             finally:
                 stats = pstats.Stats(profiler)
                 stats.dump_stats(file_name)

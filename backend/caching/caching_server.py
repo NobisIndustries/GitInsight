@@ -6,7 +6,10 @@ from typing import Any
 from fastapi import FastAPI
 from pydantic.main import BaseModel
 
+from helpers.logging_helpers import init_logging
+
 app = FastAPI()
+init_logging(app)
 
 
 @dataclass

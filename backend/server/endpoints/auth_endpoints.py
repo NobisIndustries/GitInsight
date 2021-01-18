@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from loguru import logger
 from starlette import status
 
 from configs import Authentication
@@ -100,5 +101,6 @@ def init_authentication():
     guest_permissions = UserPermissions(view_analysis=False, edit_contributors=False, edit_all=False)
     add_user(GUEST_USERNAME, NewUserInput(password='dummy', permissions=guest_permissions))
 
-    print(f'{"#" * 80}\n\nFIRST TIME CREDENTIALS\n\n  username: {first_user}\n  password: {first_password}\n\n'
-          f'This will not be shown again unless you delete the file data/config/users.json.\n\n{"#" * 80}')
+    logger.info(f'\n{"#" * 80}\n\nFIRST TIME CREDENTIALS\n\n  username: {first_user}\n  '
+                f'password: {first_password}\n\n'
+                f'This will not be shown again unless you delete the file data/config/users.json.\n\n{"#" * 80}')

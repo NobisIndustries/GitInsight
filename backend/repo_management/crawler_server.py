@@ -8,11 +8,13 @@ from starlette import status
 
 from caching.caching_decorator import reset_cache
 from configs import CrawlConfig
+from helpers.logging_helpers import init_logging
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawler import CommitCrawler, CommitProvider
 from server.endpoints.crawl_endpoints import CloneInput
 
 app = FastAPI()
+init_logging(app)
 crawler = CommitCrawler(REPO_PATH, CommitProvider())
 
 

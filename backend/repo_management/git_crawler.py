@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import git
 from bidict import bidict
+from loguru import logger
 from sqlalchemy.exc import OperationalError
 
 import db_schema as db
@@ -53,6 +54,7 @@ class CurrentFilesInfoCollector:
 class CommitProvider:
     """ Caches existing commit info objects from the database. If a requested commit info is not found,
      it creates a new one from the given data."""
+
     def __init__(self):
         self._available_commits = {}
 
@@ -95,7 +97,6 @@ class CommitCrawlerState:
 
 
 class CommitCrawler:
-
     CLEAN_BRANCH_NAME_REGEX = re.compile(r'^origin\/')
 
     SSH_KEY_PATH = Path(KEYS_PATH, 'git_ssh_key')
@@ -146,13 +147,16 @@ class CommitCrawler:
             return
 
         self._error_message = ''
+        logger.info('Start crawling')
         try:
             result = self._crawl(update_before_crawl, limit_tracked_branches_days_last_activity)
-            self._current_operation = CommitCrawlerState.SAVE_TO_DB
+            self.__change_state(CommitCrawlerState.SAVE_TO_DB)
             result.write_to_db()
         except Exception as e:
             self._error_message = str(e)
-        self._current_operation = CommitCrawlerState.IDLE
+            logger.error('Could not complete crawl:')
+            logger.exception(e)
+        self.__change_state(CommitCrawlerState.IDLE)
 
     def _crawl(self, update_before_crawl, limit_tracked_branches_days_last_activity):
         if not self.is_cloned():
@@ -160,21 +164,25 @@ class CommitCrawler:
 
         self._repo = git.Repo(self._repo_path)
         if update_before_crawl:
-            self._current_operation = CommitCrawlerState.UPDATE_REPO
+            self.__change_state(CommitCrawlerState.UPDATE_REPO)
             self.__fetch()
 
-        self._current_operation = CommitCrawlerState.GET_PREVIOUS_COMMITS
+        self.__change_state(CommitCrawlerState.GET_PREVIOUS_COMMITS)
         self._commit_provider.cache_from_db()
 
-        self._current_operation = CommitCrawlerState.EXTRACT_COMMITS
+        self.__change_state(CommitCrawlerState.EXTRACT_COMMITS)
         all_hashes = self._repo.git.execute('git rev-list --all', shell=True).splitlines()
         self._child_commit_graph = self.__extract_child_tree(all_hashes)
 
-        self._current_operation = CommitCrawlerState.CALCULATE_PATHS
+        self.__change_state(CommitCrawlerState.CALCULATE_PATHS)
         self._latest_hashes = self.__get_latest_commits_of_branches(limit_tracked_branches_days_last_activity)
         current_paths_of_branches = self.__follow_files()
 
         return CrawlResult(self._child_commit_graph, current_paths_of_branches)
+
+    def __change_state(self, new_state):
+        self._current_operation = new_state
+        logger.info(f'Now in state "{new_state}"')
 
     def __fetch(self):
         kwargs = {'GIT_SSH_COMMAND': self.GIT_SSH_COMMAND} if self.SSH_KEY_PATH.exists() else {}
@@ -183,7 +191,7 @@ class CommitCrawler:
 
     def __get_latest_commits_of_branches(self, limit_tracked_branches_days_last_activity):
         min_timestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
-                        if limit_tracked_branches_days_last_activity else 0)
+                         if limit_tracked_branches_days_last_activity else 0)
         commit_hash_of_branch = {}
         for branch in get_repo_branches(self._repo):
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"', shell=True).strip()
@@ -239,8 +247,9 @@ class CommitCrawler:
                     sub_branch_file_paths = copy(branch_file_paths)
                     child_commit_hash = self.__process_child_commmit(child_commit, files_info_collector,
                                                                      sub_branch_file_paths)
+                    # Only use recursion at commit graph branches
                     self.__follow_file_renames_from_commit(child_commit_hash, files_info_collector,
-                                                           sub_branch_file_paths)  # Only use recursion at commit graph branches
+                                                           sub_branch_file_paths)
                 return
 
     def __process_child_commmit(self, child_commit: Commit, files_info_collector: CurrentFilesInfoCollector,
@@ -271,7 +280,8 @@ class CommitCrawler:
 
 
 class CrawlResult:
-    def __init__(self, child_commit_tree: Dict[str, List[Commit]], current_paths_of_branches: CurrentFilesInfoCollector):
+    def __init__(self, child_commit_tree: Dict[str, List[Commit]],
+                 current_paths_of_branches: CurrentFilesInfoCollector):
         self.child_commit_tree = child_commit_tree
         self.current_info_of_branches = current_paths_of_branches
 
@@ -291,7 +301,6 @@ class CrawlResult:
         db_session.commit()
 
         self.current_info_of_branches.add_to_db(db_session)
-
 
 
 if __name__ == '__main__':
