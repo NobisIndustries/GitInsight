@@ -65,10 +65,8 @@ export default {
         deploy_key: this.use_deploy_key ? this.deploy_key : ''}).then(
           () => {
             this.is_cloning = false;
-            if (this.$store.state.config.clone_result)
-              this.$store.dispatch('update_db');
-
             this.$store.dispatch('load_repo_is_cloned');
+            this.$store.dispatch('load_description');
           });
     }
   },

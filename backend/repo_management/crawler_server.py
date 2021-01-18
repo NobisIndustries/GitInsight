@@ -1,3 +1,4 @@
+import re
 import threading
 import time
 
@@ -7,7 +8,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from caching.caching_decorator import reset_cache
-from configs import CrawlConfig
+from configs import CrawlConfig, ProjectDescriptionConfig
 from helpers.logging_helpers import init_logging
 from helpers.path_helpers import REPO_PATH
 from repo_management.git_crawler import CommitCrawler, CommitProvider
@@ -23,6 +24,13 @@ def crawl_with_reset(*args, **kwargs):
     reset_cache()
 
 
+def extract_repo_name_from_url(repo_url):
+    name_match = re.search(r'\/([^\/]+)\.git$', repo_url.strip())
+    if name_match:
+        return name_match.groups()[0]
+    return 'My Repo'
+
+
 @app.get('/clone')
 def is_cloned():
     return crawler.is_cloned()
@@ -34,6 +42,12 @@ def clone_repo(clone_input: CloneInput):
     try:
         crawler.set_ssh_key(clone_input.deploy_key)
         crawler.clone(clone_input.repo_url)
+
+        description = ProjectDescriptionConfig.load()
+        description.repo_name = extract_repo_name_from_url(clone_input.repo_url)
+        description.save_file()
+
+        crawl_repo()
     except Exception as e:
         response['success'] = False
         response['error_msg'] = str(e)
