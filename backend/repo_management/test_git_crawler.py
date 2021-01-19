@@ -86,16 +86,16 @@ class CommitCrawlerTest(unittest.TestCase):
         del crawler
         temp_dir.cleanup()
 
-        branch_paths = result.current_info_of_branches
+        branch_paths = result.current_info_of_branches.as_dict()
         expected = {'master': [{'id': 1, 'path': 'bats.txt'},
-                               {'id': 2, 'path': 'cave_exploration.pdf'}],
-                    'third_branch': [{'id': 2, 'path': 'stupid_hobby.pdf'},
-                                     {'id': 3, 'path': 'networking.py'}],
+                               {'id': 3, 'path': 'cave_exploration.pdf'}],
+                    'third_branch': [{'id': 3, 'path': 'stupid_hobby.pdf'},
+                                     {'id': 4, 'path': 'networking.py'}],
                     'super_branch': [{'id': 1, 'path': 'stuff/bats.txt'},
-                                     {'id': 4, 'path': 'stuff/laser.c'}]}
+                                     {'id': 2, 'path': 'stuff/laser.c'}]}
 
         self.maxDiff = None
-        self.assertDictEqual(branch_paths.as_dict(), expected)
+        self.assertDictEqual(branch_paths, expected)
 
 
 class FileOperator:

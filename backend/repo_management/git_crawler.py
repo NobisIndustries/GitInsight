@@ -1,6 +1,8 @@
 import os
 import pprint
 import re
+
+import sys
 import time
 from collections import defaultdict, namedtuple
 from copy import copy
@@ -17,6 +19,9 @@ import db_schema as db
 from helpers.git_helpers import get_repo_branches
 from helpers.path_helpers import REPO_PATH, KEYS_PATH
 from repo_management.git_crawl_items import Commit
+
+
+sys.setrecursionlimit(10000)
 
 
 class CurrentFilesInfoCollector:
@@ -243,14 +248,17 @@ class CommitCrawler:
                 current_commit_hash = self.__process_child_commmit(self._child_commit_graph[current_commit_hash][0],
                                                                    files_info_collector, branch_file_paths)
             else:
-                for child_commit in self._child_commit_graph[current_commit_hash]:
+                child_commits = self._child_commit_graph[current_commit_hash]
+                for child_commit in child_commits[1:]:
                     sub_branch_file_paths = copy(branch_file_paths)
                     child_commit_hash = self.__process_child_commmit(child_commit, files_info_collector,
                                                                      sub_branch_file_paths)
-                    # Only use recursion at commit graph branches
+                    # Only use recursion when absolutely necessary (e.g. when a new branch gets created)
                     self.__follow_file_renames_from_commit(child_commit_hash, files_info_collector,
                                                            sub_branch_file_paths)
-                return
+                # Follow the original branch without recursion to limit the stack depth
+                current_commit_hash = self.__process_child_commmit(child_commits[0],
+                                                                   files_info_collector, branch_file_paths)
 
     def __process_child_commmit(self, child_commit: Commit, files_info_collector: CurrentFilesInfoCollector,
                                 branch_file_paths: bidict):
