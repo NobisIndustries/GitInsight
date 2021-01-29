@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  reverse_proxy:
+    image: nginx:latest
+    container_name: reverse_proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx_config:/etc/nginx/conf.d
+      - ./certificates:/etc/certificates
+  main_app:
+    image: nobisindustries/gitinsight:latest
+    container_name: gitinsight_main
+    restart: always
+    expose:
+      - 80
+    volumes:
+      - ~/gitinsight_data:/app/data
+    
