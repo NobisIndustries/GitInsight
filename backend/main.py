@@ -1,3 +1,4 @@
+import os
 from multiprocessing import Process
 
 import uvicorn
@@ -9,7 +10,8 @@ from server.endpoints.auth_endpoints import init_authentication
 class Services:
     @staticmethod
     def run_main():
-        uvicorn.run('server.main_server:app', host='0.0.0.0', port=MAIN_SERVICE_PORT, workers=4)
+        n_workers = int(os.environ.get('N_WORKERS', 4))
+        uvicorn.run('server.main_server:app', host='0.0.0.0', port=MAIN_SERVICE_PORT, workers=n_workers)
 
     @staticmethod
     def run_crawler():
