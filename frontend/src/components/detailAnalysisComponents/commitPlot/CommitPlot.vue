@@ -53,6 +53,10 @@ export default {
       ],
       clicked_commit_info: null,
       plot_layout: {
+        legend: {
+          yanchor: 'top',
+          y: 0.93,
+        },
         yaxis: {
           automargin: true,
         },
