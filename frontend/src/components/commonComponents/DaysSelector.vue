@@ -11,7 +11,7 @@
 
 <script>
 
-const OPTION_ALL = 'all';
+const OPTION_ALL = -1;
 
 export default {
   name: 'DaysSelector',
@@ -42,10 +42,7 @@ export default {
         return last_days;
       },
       set(selected) {
-        let last_days = selected;
-        if (selected === OPTION_ALL)
-          last_days = null;
-        this.$emit('change', last_days)
+        this.$emit('change', selected)
       }
     },
 

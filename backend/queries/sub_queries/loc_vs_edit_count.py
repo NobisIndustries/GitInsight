@@ -3,7 +3,7 @@ import pandas as pd
 import db_schema
 import db_schema as db
 from caching.caching_decorator import cache
-from queries.helpers import get_min_timestamp
+from helpers.time_helpers import get_min_timestamp
 from queries.info_providers import BranchInfoProvider, LineCountProvider
 
 

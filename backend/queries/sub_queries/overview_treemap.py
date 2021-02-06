@@ -6,7 +6,7 @@ import pandas as pd
 import db_schema as db
 from caching.caching_decorator import cache
 from constants import PATH_SPLIT_CHAR
-from queries.helpers import get_min_timestamp
+from helpers.time_helpers import get_min_timestamp
 
 NO_BEST_TEAM = 'Inconclusive'
 NO_BEST_TEAM_COLOR = '#eeeeee'

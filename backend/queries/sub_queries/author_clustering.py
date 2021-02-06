@@ -1,11 +1,10 @@
-import time
-
 import pandas as pd
 import umap
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import db_schema as db
 from caching.caching_decorator import cache
+from helpers.time_helpers import get_min_timestamp
 
 
 class AuthorClustererQuery:
@@ -83,7 +82,7 @@ class AuthorClustererQuery:
         return ['/'.join(path_elements[:end_index]) for end_index in range(start, len(path_elements) + 1)]
 
     def __get_data(self, branch, last_days):
-        min_ts = self.__get_min_timestamp(last_days)
+        min_ts = get_min_timestamp(last_days)
         relevant_commits_query = self._session.query(
             db.SqlCommitMetadata.hash,
             db.SqlCommitMetadata.author,
@@ -104,9 +103,6 @@ class AuthorClustererQuery:
             .join(relevant_files_query).statement
         data = pd.read_sql(query, self._session.bind)
         return data
-
-    def __get_min_timestamp(self, last_days):
-        return time.time() - (24 * 3600 * last_days) if last_days else 0
 
     def __insert_team_data(self, data):
         author_column_name = db.SqlCommitMetadata.author.name

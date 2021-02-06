@@ -18,6 +18,7 @@ from sqlalchemy.exc import OperationalError
 import db_schema as db
 from helpers.git_helpers import get_repo_branches
 from helpers.path_helpers import REPO_PATH, KEYS_PATH
+from helpers.time_helpers import get_min_timestamp
 from repo_management.git_crawl_items import Commit
 
 
@@ -148,7 +149,7 @@ class CommitCrawler:
     def is_busy(self):
         return self._current_operation != CommitCrawlerState.IDLE
 
-    def crawl(self, update_before_crawl=True, limit_tracked_branches_days_last_activity=None):
+    def crawl(self, update_before_crawl=True, limit_tracked_branches_days_last_activity=-1):
         if self.is_busy():
             return
 
@@ -196,8 +197,7 @@ class CommitCrawler:
             self._repo.remotes[0].fetch()
 
     def __get_latest_commits_of_branches(self, limit_tracked_branches_days_last_activity):
-        min_timestamp = (time.time() - (limit_tracked_branches_days_last_activity * 24 * 3600)
-                         if limit_tracked_branches_days_last_activity else 0)
+        min_timestamp = get_min_timestamp(limit_tracked_branches_days_last_activity)
         commit_hash_of_branch = {}
         for branch in get_repo_branches(self._repo):
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"', shell=True).strip()

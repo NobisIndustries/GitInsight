@@ -1,10 +1,4 @@
-import time
-
 import db_schema
-
-
-def get_min_timestamp(last_days):
-    return time.time() - (24 * 3600 * last_days) if last_days else 0
 
 
 def get_common_query_init_arguments():  # Because I am to lazy to import these things everytime in the endpoints

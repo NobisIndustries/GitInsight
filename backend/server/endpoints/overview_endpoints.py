@@ -18,11 +18,9 @@ author_clusterer = AuthorClustererQuery(db_session, author_info_provider, branch
 
 
 @router.get('/count_and_team_of_dirs/{branch_base64}')
-async def get_count_and_best_team_of_dir(branch_base64: str, last_days=None,
+async def get_count_and_best_team_of_dir(branch_base64: str, last_days: int = -1,
                                          can_view_analysis=Depends(user_can_view_analysis)):
     branch = b64decode(branch_base64)
-    if last_days:
-        last_days = int(last_days)
     data = treemap_overview.calculate(branch, last_days=last_days, max_depth=5)
     if data is None:
         return None
@@ -30,11 +28,9 @@ async def get_count_and_best_team_of_dir(branch_base64: str, last_days=None,
 
 
 @router.get('/loc_vs_edit_counts/{branch_base64}')
-async def get_loc_vs_edit_counts(branch_base64: str, last_days=None,
+async def get_loc_vs_edit_counts(branch_base64: str, last_days: int = -1,
                                  can_view_analysis=Depends(user_can_view_analysis)):
     branch = b64decode(branch_base64)
-    if last_days:
-        last_days = int(last_days)
     data = loc_vs_entry_count.calculate(branch, last_days=last_days)
     if data is None:
         return None
@@ -42,11 +38,9 @@ async def get_loc_vs_edit_counts(branch_base64: str, last_days=None,
 
 
 @router.get('/author_clusters/{branch_base64}')
-async def get_author_clusters(branch_base64: str, last_days=None,
+async def get_author_clusters(branch_base64: str, last_days: int = -1,
                               can_view_analysis=Depends(user_can_view_analysis)):
     branch = b64decode(branch_base64)
-    if last_days:
-        last_days = int(last_days)
     data = author_clusterer.calculate(branch, last_days)
     if data is None:
         return None
