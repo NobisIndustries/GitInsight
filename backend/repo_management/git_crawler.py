@@ -103,6 +103,7 @@ class CommitCrawlerState:
 
 class CommitCrawler:
     CLEAN_BRANCH_NAME_REGEX = re.compile(r'^origin\/')
+    MASTER_BRANCHES = ['main', 'master']
 
     SSH_KEY_PATH = Path(KEYS_PATH, 'git_ssh_key')
     GIT_SSH_COMMAND = f'ssh -i {SSH_KEY_PATH} -o "StrictHostKeyChecking no"'
@@ -201,8 +202,9 @@ class CommitCrawler:
         for branch in get_repo_branches(self._repo):
             commit_hash = self._repo.git.execute(f'git rev-parse "{branch}"', shell=True).strip()
             commit_metadata = self._commit_provider.get_cached_commit(commit_hash).metadata
-            if commit_metadata.authored_timestamp >= min_timestamp:
-                commit_hash_of_branch[commit_hash] = self.__clean_origin_branch_name(branch)
+            cleaned_branch = self.__clean_origin_branch_name(branch)
+            if commit_metadata.authored_timestamp >= min_timestamp or (cleaned_branch in self.MASTER_BRANCHES):
+                commit_hash_of_branch[commit_hash] = cleaned_branch
         return commit_hash_of_branch
 
     def __clean_origin_branch_name(self, branch_name):
